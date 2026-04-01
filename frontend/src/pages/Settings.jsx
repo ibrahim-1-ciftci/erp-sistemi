@@ -58,6 +58,8 @@ export default function Settings() {
     try { await api.delete(`/settings/users/${id}`); toast.success('Silindi'); loadUsers() }
     catch (e) { toast.error(e.response?.data?.detail || 'Hata') }
   }
+
+  const saveCompany = async () => {
     setLoading(true)
     try {
       await api.put('/settings', company)
