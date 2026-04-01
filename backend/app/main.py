@@ -11,7 +11,12 @@ app = FastAPI(title="ERP Sistemi", version="1.0.0", description="Üretim ve İş
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://erp-sistemi-production.up.railway.app",
+        "https://*.vercel.app",  # Vercel preview URL'leri
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
