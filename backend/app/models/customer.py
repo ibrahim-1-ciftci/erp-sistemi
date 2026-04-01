@@ -1,0 +1,18 @@
+from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from app.core.database import Base
+
+class Customer(Base):
+    __tablename__ = "customers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    address = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    payment_term_days = Column(Integer, nullable=True)  # Vade günü (örn. 30)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    orders = relationship("Order", back_populates="customer", foreign_keys="Order.customer_id")
