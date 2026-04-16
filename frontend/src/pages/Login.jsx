@@ -15,7 +15,12 @@ export default function Login() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/login', form)
-      login(data.access_token, data.user)
+      // Login sonrası izinleri çek
+      const token = data.access_token
+      localStorage.setItem('token', token) // geçici olarak set et
+      const settingsRes = await api.get('/settings')
+      const perms = settingsRes.data.user?.permissions || {}
+      login(token, data.user, perms)
       navigate('/')
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Giriş başarısız')

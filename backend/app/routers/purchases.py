@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import date
 from pydantic import BaseModel
 from app.core.database import get_db
-from app.core.deps import get_current_user, log_activity
+from app.core.deps import get_current_user, check_permission, check_permission, log_activity
 from app.models.purchase import Purchase, PurchaseStatus
 from app.models.raw_material import RawMaterial
 from app.models.stock_movement import StockMovement, MovementType
@@ -45,7 +45,7 @@ def build(p: Purchase) -> dict:
     }
 
 @router.get("")
-def list_purchases(status: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_purchases(status: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(check_permission("purchases", "view"))):
     query = db.query(Purchase).order_by(Purchase.created_at.desc())
     if status:
         query = query.filter(Purchase.status == status)
@@ -72,7 +72,7 @@ def create_purchase(data: PurchaseCreate, db: Session = Depends(get_db), current
 
 @router.post("/{purchase_id}/receive")
 def receive_purchase(purchase_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Malzeme teslim alındı — stoka ekle"""
+    """Malzeme teslim alındı — stoka ekle, kasaya gider yaz"""
     p = db.query(Purchase).filter(Purchase.id == purchase_id).first()
     if not p: raise HTTPException(404, "Kayıt bulunamadı")
     if p.status == PurchaseStatus.received: raise HTTPException(400, "Zaten teslim alındı")
@@ -82,6 +82,18 @@ def receive_purchase(purchase_id: int, db: Session = Depends(get_db), current_us
     mv = StockMovement(material_id=mat.id, type=MovementType.in_, quantity=p.quantity,
                        description=f"Satın alma #{p.id} teslim alındı")
     db.add(mv)
+
+    # Kasaya gider kaydı
+    from app.models.cashflow import CashFlow
+    cf = CashFlow(
+        flow_date=date.today(),
+        flow_type="expense",
+        amount=p.total_cost,
+        description=f"Satın alma: {mat.name} x{p.quantity} {mat.unit}",
+        category="Hammadde Alımı",
+    )
+    db.add(cf)
+
     p.status = PurchaseStatus.received
     p.received_date = date.today()
     db.commit()

@@ -19,6 +19,8 @@ export default function RawMaterials() {
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [adjustQty, setAdjustQty] = useState(0)
+  const [unitList, setUnitList] = useState(['kg','g','ton','lt','ml','adet','kutu','paket','metre','cm'])
+  const [defaultUnit, setDefaultUnit] = useState('kg')
   const limit = 15
 
   const load = () => {
@@ -28,8 +30,17 @@ export default function RawMaterials() {
 
   useEffect(() => { load() }, [page, search])
   useEffect(() => { api.get('/suppliers', { params: { limit: 100 } }).then(r => setSuppliers(r.data.items)) }, [])
+  useEffect(() => {
+    api.get('/settings').then(r => {
+      const du = r.data.default_unit || 'kg'
+      const ul = (r.data.weight_units || 'kg,g,ton,lt,ml,adet,kutu,paket,metre,cm').split(',').filter(Boolean)
+      setDefaultUnit(du)
+      setUnitList(ul)
+      setForm(f => ({ ...f, unit: du }))
+    })
+  }, [])
 
-  const openCreate = () => { setForm(emptyForm); setModal('create') }
+  const openCreate = () => { setForm({ ...emptyForm, unit: defaultUnit }); setModal('create') }
   const openEdit = row => { setSelected(row); setForm({ ...row, supplier_id: row.supplier_id || '' }); setModal('edit') }
   const openAdjust = row => { setSelected(row); setAdjustQty(0); setModal('adjust') }
 
@@ -77,12 +88,22 @@ export default function RawMaterials() {
 
   const FormFields = (
     <div className="space-y-3">
-      {[['name','Ad','text'],['unit','Birim','text'],['stock_quantity','Stok Miktarı','number'],['min_stock_level','Min Stok','number'],['purchase_price','Alış Fiyatı (₺)','number']].map(([k,l,t]) => (
+      {[['name','Ad','text'],['stock_quantity','Stok Miktarı','number'],['min_stock_level','Min Stok','number'],['purchase_price','Alış Fiyatı (₺)','number']].map(([k,l,t]) => (
         <div key={k}>
           <label className="block text-sm font-medium mb-1">{l}</label>
           <input type={t} className="w-full border rounded-lg px-3 py-2 text-sm" value={form[k]} onChange={e => setForm({...form,[k]:e.target.value})} />
         </div>
       ))}
+      <div>
+        <label className="block text-sm font-medium mb-1">Birim</label>
+        <div className="flex gap-2">
+          <select className="flex-1 border rounded-lg px-3 py-2 text-sm" value={form.unit} onChange={e => setForm({...form, unit: e.target.value})}>
+            {unitList.map(u => <option key={u} value={u}>{u}</option>)}
+          </select>
+          <input className="w-24 border rounded-lg px-3 py-2 text-sm" placeholder="Özel..." value={unitList.includes(form.unit) ? '' : form.unit}
+            onChange={e => setForm({...form, unit: e.target.value})} />
+        </div>
+      </div>
       <div>
         <label className="block text-sm font-medium mb-1">Tedarikçi</label>
         <select className="w-full border rounded-lg px-3 py-2 text-sm" value={form.supplier_id} onChange={e => setForm({...form, supplier_id: e.target.value})}>

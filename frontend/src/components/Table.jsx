@@ -1,22 +1,31 @@
 export default function Table({ columns, data, emptyText = "Veri bulunamadı" }) {
+  const rows = data || []
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50 border-b border-gray-200">
+    <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'var(--border)' }}>
+      <table className="w-full text-sm" style={{ color: 'var(--text-primary)' }}>
+        <thead style={{ backgroundColor: 'var(--bg-table-head)', borderBottom: `1px solid var(--border)` }}>
           <tr>
             {columns.map(col => (
-              <th key={col.key} className="px-4 py-3 text-left font-medium text-gray-600">{col.label}</th>
+              <th key={col.key} className="px-4 py-3 text-left font-medium"
+                style={{ color: 'var(--text-secondary)' }}>{col.label}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
-          {data.length === 0 ? (
-            <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-gray-400">{emptyText}</td></tr>
-          ) : data.map((row, i) => (
-            <tr key={i} className="hover:bg-gray-50">
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={columns.length} className="px-4 py-8 text-center"
+                style={{ color: 'var(--text-secondary)' }}>{emptyText}</td>
+            </tr>
+          ) : rows.map((row, i) => (
+            <tr key={row?.id ?? i}
+              style={{ borderTop: `1px solid var(--border)` }}
+              className="transition-colors"
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}>
               {columns.map(col => (
                 <td key={col.key} className="px-4 py-3">
-                  {col.render ? col.render(row) : row[col.key]}
+                  {col.render ? col.render(row) : (row[col.key] ?? '-')}
                 </td>
               ))}
             </tr>

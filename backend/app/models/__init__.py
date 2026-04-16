@@ -12,3 +12,9 @@ from app.models.payment import Payment
 from app.models.setting import Setting
 from app.models.debt import Debt
 from app.models.purchase import Purchase
+from app.models.cashflow import CashFlow
+from app.models.customer_price import CustomerPrice
+from app.models.role_permission import RolePermission
+from app.models.custom_role import CustomRole
+from app.models.employee import Employee, EmployeeLeave, SalaryPayment
+from app.models.custom_role import CustomRole

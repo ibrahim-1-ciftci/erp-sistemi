@@ -3,7 +3,7 @@ import api from '../api/axios'
 import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
 import Table from '../components/Table'
-import { Plus, Download, Trash2, Edit2, Banknote, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import { Plus, Download, Trash2, Edit2, Banknote, AlertTriangle, Clock, ArchiveRestore } from 'lucide-react'
 
 const STATUS = {
   pending: { label: 'Ödenmedi',  cls: 'bg-yellow-100 text-yellow-700' },
@@ -20,19 +20,30 @@ function Badge({ s }) {
 }
 
 export default function Debts() {
+  const [tab, setTab]           = useState('active') // 'active' | 'archive'
   const [items, setItems]       = useState([])
   const [summary, setSummary]   = useState({ total_debt: 0, overdue_count: 0 })
   const [filter, setFilter]     = useState('')
-  const [modal, setModal]       = useState(null)  // null | 'create' | 'edit' | 'pay'
+  const [modal, setModal]       = useState(null)
   const [selected, setSelected] = useState(null)
   const [form, setForm]         = useState(emptyForm)
   const [payForm, setPayForm]   = useState({ amount: '', paid_date: today })
 
-  const load = () =>
-    api.get('/debts', { params: { status: filter || undefined } })
-      .then(r => { setItems(r.data.items); setSummary({ total_debt: r.data.total_debt, overdue_count: r.data.overdue_count }) })
+  const load = () => {
+    const statusParam = tab === 'archive' ? 'paid' : (filter || undefined)
+    api.get('/debts', { params: { status: statusParam } })
+      .then(r => {
+        let result = r.data.items
+        // Aktif sekmede paid olanları gizle
+        if (tab === 'active' && !filter) {
+          result = result.filter(d => d.status !== 'paid')
+        }
+        setItems(result)
+        setSummary({ total_debt: r.data.total_debt, overdue_count: r.data.overdue_count })
+      })
+  }
 
-  useEffect(() => { load() }, [filter])
+  useEffect(() => { load() }, [filter, tab])
 
   const openCreate = () => { setForm(emptyForm); setModal('create') }
   const openEdit   = d  => { setSelected(d); setForm({ creditor: d.creditor, description: d.description || '', total_amount: d.total_amount, due_date: d.due_date, notes: d.notes || '' }); setModal('edit') }
@@ -61,10 +72,21 @@ export default function Debts() {
     catch { toast.error('Hata') }
   }
 
+  // Arşivden çıkar — ödemeyi sıfırla
+  const handleUnarchive = async d => {
+    if (!confirm('Bu borcu arşivden çıkarmak ve ödenmemiş olarak işaretlemek istediğinize emin misiniz?')) return
+    try {
+      await api.put(`/debts/${d.id}`, { paid_amount: 0, paid_date: null })
+      toast.success('Borç geri alındı, ödenmemiş olarak kaydedildi')
+      load()
+    } catch { toast.error('Hata') }
+  }
+
   const exportExcel = async () => {
     try {
       const token = localStorage.getItem('token')
-      const p = filter ? `?status=${filter}` : ''
+      const statusParam = tab === 'archive' ? 'paid' : (filter || '')
+      const p = statusParam ? `?status=${statusParam}` : ''
       const res = await fetch(`/api/debts/export${p}`, { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) throw new Error()
       const blob = await res.blob()
@@ -74,7 +96,7 @@ export default function Debts() {
     } catch { toast.error('Export başarısız') }
   }
 
-  const columns = [
+  const activeColumns = [
     { key: 'creditor',     label: 'Alacaklı',    render: r => <span className="font-medium">{r.creditor}</span> },
     { key: 'description',  label: 'Açıklama',    render: r => r.description || '-' },
     { key: 'total_amount', label: 'Toplam',       render: r => `₺${r.total_amount?.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}` },
@@ -89,10 +111,24 @@ export default function Debts() {
     { key: 'status', label: 'Durum', render: r => <Badge s={r.status} /> },
     { key: 'actions', label: '', render: r => (
       <div className="flex gap-1">
-        {r.status !== 'paid' && (
-          <button onClick={() => openPay(r)} className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 whitespace-nowrap">Ödeme Yap</button>
-        )}
+        <button onClick={() => openPay(r)} className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 whitespace-nowrap">Ödeme Yap</button>
         <button onClick={() => openEdit(r)} className="text-gray-500 hover:text-gray-700 p-1"><Edit2 size={13} /></button>
+        <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 p-1"><Trash2 size={13} /></button>
+      </div>
+    )}
+  ]
+
+  const archiveColumns = [
+    { key: 'creditor',     label: 'Alacaklı',    render: r => <span className="font-medium">{r.creditor}</span> },
+    { key: 'description',  label: 'Açıklama',    render: r => r.description || '-' },
+    { key: 'total_amount', label: 'Toplam',       render: r => `₺${r.total_amount?.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}` },
+    { key: 'paid_date',    label: 'Ödenme Tarihi', render: r => r.paid_date ? new Date(r.paid_date).toLocaleDateString('tr-TR') : '-' },
+    { key: 'actions', label: '', render: r => (
+      <div className="flex gap-1">
+        <button onClick={() => handleUnarchive(r)}
+          className="flex items-center gap-1 text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 whitespace-nowrap">
+          <ArchiveRestore size={11} /> Geri Al
+        </button>
         <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 p-1"><Trash2 size={13} /></button>
       </div>
     )}
@@ -107,44 +143,66 @@ export default function Debts() {
           <button onClick={exportExcel} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 text-sm">
             <Download size={15} /> Excel
           </button>
-          <button onClick={openCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
-            <Plus size={16} /> Yeni Borç
-          </button>
+          {tab === 'active' && (
+            <button onClick={openCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+              <Plus size={16} /> Yeni Borç
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Özet kartlar */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-          <div className="p-2 bg-red-50 rounded-lg"><Banknote size={20} className="text-red-600" /></div>
-          <div><p className="text-xs text-gray-500">Toplam Borç</p>
-            <p className="text-xl font-bold text-red-600">₺{summary.total_debt?.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p></div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-          <div className="p-2 bg-orange-50 rounded-lg"><AlertTriangle size={20} className="text-orange-600" /></div>
-          <div><p className="text-xs text-gray-500">Gecikmiş</p>
-            <p className="text-xl font-bold text-orange-600">{summary.overdue_count} adet</p></div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg"><Clock size={20} className="text-blue-600" /></div>
-          <div><p className="text-xs text-gray-500">Toplam Kayıt</p>
-            <p className="text-xl font-bold">{items.length}</p></div>
-        </div>
+      {/* Aktif / Arşiv sekmeleri */}
+      <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1 w-fit">
+        <button onClick={() => { setTab('active'); setFilter('') }}
+          className={`px-5 py-2 rounded-md text-sm font-medium transition-all ${tab === 'active' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
+          Aktif Borçlar
+          {summary.overdue_count > 0 && tab === 'active' && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{summary.overdue_count}</span>
+          )}
+        </button>
+        <button onClick={() => { setTab('archive'); setFilter('') }}
+          className={`px-5 py-2 rounded-md text-sm font-medium transition-all ${tab === 'archive' ? 'bg-white shadow text-green-600' : 'text-gray-500 hover:text-gray-700'}`}>
+          Ödenen Arşivi
+        </button>
       </div>
 
-      {/* Filtre */}
-      <div className="flex gap-2 mb-4">
-        {[['', 'Tümü'], ['pending', 'Ödenmedi'], ['overdue', 'Gecikmiş'], ['partial', 'Kısmi'], ['paid', 'Ödendi']].map(([v, l]) => (
-          <button key={v} onClick={() => setFilter(v)}
-            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${filter === v ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
-            {l}
-          </button>
-        ))}
-      </div>
+      {/* Özet kartlar — sadece aktif sekmede */}
+      {tab === 'active' && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+            <div className="p-2 bg-red-50 rounded-lg"><Banknote size={20} className="text-red-600" /></div>
+            <div><p className="text-xs text-gray-500">Toplam Borç</p>
+              <p className="text-xl font-bold text-red-600">₺{summary.total_debt?.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p></div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+            <div className="p-2 bg-orange-50 rounded-lg"><AlertTriangle size={20} className="text-orange-600" /></div>
+            <div><p className="text-xs text-gray-500">Gecikmiş</p>
+              <p className="text-xl font-bold text-orange-600">{summary.overdue_count} adet</p></div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg"><Clock size={20} className="text-blue-600" /></div>
+            <div><p className="text-xs text-gray-500">Aktif Kayıt</p>
+              <p className="text-xl font-bold">{items.length}</p></div>
+          </div>
+        </div>
+      )}
+
+      {/* Filtre — sadece aktif sekmede */}
+      {tab === 'active' && (
+        <div className="flex gap-2 mb-4">
+          {[['', 'Tümü'], ['pending', 'Ödenmedi'], ['overdue', 'Gecikmiş'], ['partial', 'Kısmi']].map(([v, l]) => (
+            <button key={v} onClick={() => setFilter(v)}
+              className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${filter === v ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Tablo */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <Table columns={columns} data={items} emptyText="Borç kaydı bulunamadı" />
+        <Table columns={tab === 'active' ? activeColumns : archiveColumns} data={items}
+          emptyText={tab === 'archive' ? 'Henüz ödenen borç yok' : 'Borç kaydı bulunamadı'} />
       </div>
 
       {/* Yeni / Düzenle Modalı */}

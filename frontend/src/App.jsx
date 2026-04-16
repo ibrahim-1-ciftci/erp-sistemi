@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './store/authStore'
+import { ThemeProvider } from './store/themeStore'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -15,7 +16,9 @@ import Customers from './pages/Customers'
 import Payments from './pages/Payments'
 import Debts from './pages/Debts'
 import Purchases from './pages/Purchases'
+import Cashflow from './pages/Cashflow'
 import Settings from './pages/Settings'
+import Employees from './pages/Employees'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -38,7 +41,9 @@ function AppRoutes() {
       <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
       <Route path="/debts" element={<PrivateRoute><Debts /></PrivateRoute>} />
       <Route path="/purchases" element={<PrivateRoute><Purchases /></PrivateRoute>} />
+      <Route path="/cashflow" element={<PrivateRoute><Cashflow /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+      <Route path="/employees" element={<PrivateRoute><Employees /></PrivateRoute>} />
       <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
     </Routes>
   )
@@ -46,9 +51,11 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Toaster position="top-right" />
-      <AppRoutes />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Toaster position="top-right" />
+        <AppRoutes />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

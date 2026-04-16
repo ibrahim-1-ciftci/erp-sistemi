@@ -1,14 +1,39 @@
 # Python
-backend/venv/
-backend/__pycache__/
-backend/**/__pycache__/
-backend/*.pyc
-backend/.env
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+env/
+
+# Environment
+.env
+*.env
+
+# Database
+*.sqlite3
+*.db
+*.backup
+*.sql
 
 # Node
-frontend/node_modules/
-frontend/dist/
+node_modules/
+dist/
+.next/
 
-# Misc
-*.log
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log

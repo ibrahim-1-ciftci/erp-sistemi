@@ -2,4 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-body { @apply bg-gray-50 text-gray-900; }
+:root {
+  --bg-app:        #f3f4f6;
+  --bg-sidebar:    #111827;
+  --bg-card:       #ffffff;
+  --bg-input:      #ffffff;
+  --bg-table-head: #f9fafb;
+  --bg-hover:      #f9fafb;
+  --text-primary:  #111827;
+  --text-secondary:#6b7280;
+  --text-sidebar:  #d1d5db;
+  --text-sidebar-active: #ffffff;
+  --border:        #e5e7eb;
+  --accent:        #3b82f6;
+  --accent-hover:  #2563eb;
+  --accent-text:   #ffffff;
+  --sidebar-active:#2563eb;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 0.25s, color 0.25s;
+}
+
+/* ── Tema utility sınıfları ── */
+.t-page       { background-color: var(--bg-app); color: var(--text-primary); }
+.t-card       { background-color: var(--bg-card) !important; border-color: var(--border) !important; color: var(--text-primary); }
+.t-input      { background-color: var(--bg-input) !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+.t-select     { background-color: var(--bg-input) !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+.t-thead      { background-color: var(--bg-table-head) !important; border-color: var(--border) !important; }
+.t-row        { border-color: var(--border) !important; color: var(--text-primary); }
+.t-row:hover  { background-color: var(--bg-hover) !important; }
+.t-border     { border-color: var(--border) !important; }
+.t-text       { color: var(--text-primary) !important; }
+.t-text-sub   { color: var(--text-secondary) !important; }
+.t-divider    { border-color: var(--border) !important; }
+.t-btn        { background-color: var(--accent) !important; color: var(--accent-text) !important; }
+.t-btn:hover  { background-color: var(--accent-hover) !important; }
+
+/* Tablo genel */
+table { color: var(--text-primary); }
+thead { background-color: var(--bg-table-head); }
+thead th { color: var(--text-secondary); border-color: var(--border); }
+tbody tr { border-color: var(--border); }
+tbody tr:hover { background-color: var(--bg-hover); }
+
+/* Input/Select genel */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: var(--bg-input);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+
+/* Kart genel */
+.bg-white {
+  background-color: var(--bg-card) !important;
+}
+.border-gray-100, .border-gray-200 {
+  border-color: var(--border) !important;
+}
+.text-gray-800, .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+.text-gray-600, .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+.text-gray-500, .text-gray-400 {
+  color: var(--text-secondary) !important;
+  opacity: 0.8;
+}
+.bg-gray-50 {
+  background-color: var(--bg-table-head) !important;
+}
+.bg-gray-100 {
+  background-color: var(--bg-hover) !important;
+}
+.hover\:bg-gray-50:hover {
+  background-color: var(--bg-hover) !important;
+}
+.hover\:bg-gray-100:hover {
+  background-color: var(--bg-hover) !important;
+}
+.divide-gray-100 > * + * {
+  border-color: var(--border) !important;
+}
+.divide-y > * + * {
+  border-color: var(--border) !important;
+}
+
+/* Modal overlay */
+.fixed.inset-0.bg-black\/50 {
+  background-color: rgba(0,0,0,0.6) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-app); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }

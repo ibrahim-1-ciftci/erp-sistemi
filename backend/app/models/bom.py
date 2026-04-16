@@ -22,6 +22,7 @@ class BOMItem(Base):
     bom_id = Column(Integer, ForeignKey("boms.id"), nullable=False)
     raw_material_id = Column(Integer, ForeignKey("raw_materials.id"), nullable=False)
     quantity_required = Column(Float, nullable=False)
+    order = Column(Integer, default=0, name="sort_order")  # Sıra numarası
 
     bom = relationship("BOM", back_populates="items")
     raw_material = relationship("RawMaterial", back_populates="bom_items")

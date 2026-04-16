@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+﻿from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
@@ -8,7 +8,7 @@ from io import BytesIO
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, check_permission
 from app.models.raw_material import RawMaterial
 from app.models.product import Product
 from app.models.order import Order, OrderStatus
@@ -32,7 +32,7 @@ def add_company_header(ws, col_count: int):
 
 
 @router.get("/dashboard")
-def dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def dashboard(db: Session = Depends(get_db), current_user: User = Depends(check_permission("reports", "view"))):
     from app.models.payment import Payment
     from app.models.debt import Debt
     materials = db.query(RawMaterial).all()
@@ -80,6 +80,19 @@ def dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_cu
     debts = db.query(Debt).all()
     total_payable = sum(d.total_amount - (d.paid_amount or 0) for d in debts if (d.paid_amount or 0) < d.total_amount)
 
+    # Kasa / Ciro — bu ay
+    from app.models.cashflow import CashFlow
+    from datetime import date as dt_date
+    month_start = dt_date.today().replace(day=1)
+    cashflows = db.query(CashFlow).filter(CashFlow.flow_date >= month_start).all()
+    monthly_cash_income  = sum(f.amount for f in cashflows if f.flow_type == "income")
+    monthly_cash_expense = sum(f.amount for f in cashflows if f.flow_type == "expense")
+    monthly_cash_net     = monthly_cash_income - monthly_cash_expense
+    # Bugünkü kasa
+    today_flows = db.query(CashFlow).filter(CashFlow.flow_date == dt_date.today()).all()
+    today_income  = sum(f.amount for f in today_flows if f.flow_type == "income")
+    today_expense = sum(f.amount for f in today_flows if f.flow_type == "expense")
+
     return {
         "low_stock_count": len(low_stock),
         "low_stock_items": [{"id": m.id, "name": m.name, "stock_quantity": m.stock_quantity, "min_stock_level": m.min_stock_level, "unit": m.unit} for m in low_stock],
@@ -95,6 +108,11 @@ def dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_cu
         "monthly_production": monthly_production,
         "total_receivable": round(total_receivable, 2),
         "total_payable": round(total_payable, 2),
+        "monthly_cash_income": round(monthly_cash_income, 2),
+        "monthly_cash_expense": round(monthly_cash_expense, 2),
+        "monthly_cash_net": round(monthly_cash_net, 2),
+        "today_income": round(today_income, 2),
+        "today_expense": round(today_expense, 2),
     }
 
 @router.get("/stock-movements")
@@ -102,6 +120,8 @@ def stock_movements(
     skip: int = 0, limit: int = 100,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    movement_type: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -110,18 +130,26 @@ def stock_movements(
         query = query.filter(func.date(StockMovement.created_at) >= date_from)
     if date_to:
         query = query.filter(func.date(StockMovement.created_at) <= date_to)
+    if movement_type:
+        query = query.filter(StockMovement.type == movement_type)
     total = query.count()
     movements = query.order_by(StockMovement.created_at.desc()).offset(skip).limit(limit).all()
     result = []
     for mv in movements:
+        mat_name = mv.material.name if mv.material else None
+        prd_name = mv.product.name if mv.product else None
+        name = mat_name or prd_name or ''
+        # Arama filtresi — Python tarafında (join yazmaktan kaçınmak için)
+        if search and search.lower() not in name.lower() and search.lower() not in (mv.description or '').lower():
+            continue
         result.append({
             "id": mv.id,
             "type": mv.type,
             "quantity": mv.quantity,
             "description": mv.description,
             "created_at": mv.created_at,
-            "material_name": mv.material.name if mv.material else None,
-            "product_name": mv.product.name if mv.product else None
+            "material_name": mat_name,
+            "product_name": prd_name,
         })
     return {"total": total, "items": result}
 
@@ -130,6 +158,8 @@ def activity_logs(
     skip: int = 0, limit: int = 100,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    action_filter: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -138,9 +168,32 @@ def activity_logs(
         query = query.filter(func.date(ActivityLog.created_at) >= date_from)
     if date_to:
         query = query.filter(func.date(ActivityLog.created_at) <= date_to)
+    if action_filter:
+        query = query.filter(ActivityLog.action == action_filter)
+    if search:
+        query = query.filter(
+            ActivityLog.details.ilike(f"%{search}%") |
+            ActivityLog.entity.ilike(f"%{search}%") |
+            ActivityLog.action.ilike(f"%{search}%")
+        )
     total = query.count()
     logs = query.order_by(ActivityLog.created_at.desc()).offset(skip).limit(limit).all()
     return {"total": total, "items": logs}
+
+
+@router.delete("/cleanup")
+def cleanup_old_logs(
+    days: int = 15,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """15 günden eski activity_log ve stock_movement kayıtlarını sil."""
+    from datetime import datetime, timezone
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    deleted_logs = db.query(ActivityLog).filter(ActivityLog.created_at < cutoff).delete()
+    deleted_movements = db.query(StockMovement).filter(StockMovement.created_at < cutoff).delete()
+    db.commit()
+    return {"deleted_logs": deleted_logs, "deleted_movements": deleted_movements, "cutoff_days": days}
 
 @router.get("/profitability")
 def profitability(

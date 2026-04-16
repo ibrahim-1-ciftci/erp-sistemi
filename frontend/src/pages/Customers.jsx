@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import Table from '../components/Table'
 import Modal from '../components/Modal'
 import Pagination from '../components/Pagination'
-import { Plus, Search, Eye, Trash2, Edit2, User, Download } from 'lucide-react'
+import { Plus, Search, Eye, Trash2, Edit2, User, Download, Tag } from 'lucide-react'
 
 const emptyForm = { name: '', phone: '', email: '', address: '', notes: '', payment_term_days: '' }
 
@@ -21,6 +21,10 @@ export default function Customers() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
+  const [priceModal, setPriceModal] = useState(false)
+  const [priceCustomer, setPriceCustomer] = useState(null)
+  const [products, setProducts] = useState([])
+  const [customerPrices, setCustomerPrices] = useState([]) // [{product_id, price}]
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [viewCustomer, setViewCustomer] = useState(null)
@@ -32,6 +36,34 @@ export default function Customers() {
   }
 
   useEffect(() => { load() }, [page, search])
+  useEffect(() => { api.get('/products', { params: { limit: 200 } }).then(r => setProducts(r.data.items)) }, [])
+
+  const openPrices = async (c) => {
+    setPriceCustomer(c)
+    const res = await api.get(`/customers/${c.id}/prices`)
+    // Tüm ürünleri göster, özel fiyatı olanlar dolu gelsin
+    const priceMap = {}
+    res.data.forEach(p => { priceMap[p.product_id] = p.price })
+    setPriceModal(true)
+    // customerPrices: tüm ürünler için satır, özel fiyat varsa dolu
+    const allProducts = (await api.get('/products', { params: { limit: 200 } })).data.items
+    setCustomerPrices(allProducts.map(p => ({
+      product_id: p.id,
+      product_name: p.name,
+      standard_price: p.sale_price,
+      price: priceMap[p.id] !== undefined ? priceMap[p.id] : ''
+    })))
+  }
+
+  const savePrices = async () => {
+    const toSave = customerPrices.filter(p => p.price !== '' && p.price !== null)
+    try {
+      await api.put(`/customers/${priceCustomer.id}/prices`,
+        toSave.map(p => ({ product_id: p.product_id, price: Number(p.price) })))
+      toast.success('Özel fiyatlar kaydedildi')
+      setPriceModal(false)
+    } catch (e) { toast.error(e.response?.data?.detail || 'Hata') }
+  }
 
   const openCreate = () => { setForm(emptyForm); setEditId(null); setModal('form') }
   const openEdit = (c) => { setForm({ name: c.name, phone: c.phone || '', email: c.email || '', address: c.address || '', notes: c.notes || '', payment_term_days: c.payment_term_days || '' }); setEditId(c.id); setModal('form') }
@@ -45,11 +77,17 @@ export default function Customers() {
   const handleSave = async () => {
     if (!form.name) return toast.error('Müşteri adı zorunlu')
     try {
+      const payload = {
+        ...form,
+        payment_term_days: form.payment_term_days !== '' && form.payment_term_days !== null
+          ? Number(form.payment_term_days)
+          : null
+      }
       if (editId) {
-        await api.put(`/customers/${editId}`, form)
+        await api.put(`/customers/${editId}`, payload)
         toast.success('Güncellendi')
       } else {
-        await api.post('/customers', form)
+        await api.post('/customers', payload)
         toast.success('Müşteri oluşturuldu')
       }
       setModal(null); load()
@@ -85,6 +123,7 @@ export default function Customers() {
       <div className="flex gap-1">
         <button onClick={() => openView(r)} className="text-blue-600 hover:text-blue-800 p-1"><Eye size={14} /></button>
         <button onClick={() => openEdit(r)} className="text-gray-500 hover:text-gray-700 p-1"><Edit2 size={14} /></button>
+        <button onClick={() => openPrices(r)} className="text-orange-500 hover:text-orange-700 p-1" title="Özel Fiyatlar"><Tag size={14} /></button>
         <button onClick={() => handleDelete(r.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={14} /></button>
       </div>
     )}
@@ -97,7 +136,20 @@ export default function Customers() {
         <div className="flex gap-2">
           <button onClick={() => downloadExcel('customers', 'musteriler.xlsx').catch(() => toast.error('Hata'))}
             className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 text-sm">
-            <Download size={15} /> Excel
+            <Download size={15} /> Müşteri Listesi
+          </button>
+          <button onClick={async () => {
+            try {
+              const token = localStorage.getItem('token')
+              const res = await fetch('/api/customers/export/prices', { headers: { Authorization: `Bearer ${token}` } })
+              if (!res.ok) throw new Error()
+              const blob = await res.blob()
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a'); a.href = url; a.download = 'ozel_fiyatlar.xlsx'; a.click()
+              URL.revokeObjectURL(url)
+            } catch { toast.error('Hata') }
+          }} className="flex items-center gap-2 bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 text-sm">
+            <Tag size={15} /> Özel Fiyatlar
           </button>
           <button onClick={openCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
             <Plus size={16} /> Yeni Müşteri
@@ -182,6 +234,57 @@ export default function Customers() {
             </table>
           ) : <p className="text-gray-400 text-sm">Henüz sipariş yok</p>}
         </Modal>
+      )}
+
+      {/* Özel Fiyat Modalı */}
+      {priceModal && priceCustomer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h2 className="text-lg font-semibold">Özel Fiyatlar — {priceCustomer.name}</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Boş bırakılan ürünlerde standart fiyat uygulanır</p>
+              </div>
+              <button onClick={() => setPriceModal(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium text-gray-600">Ürün</th>
+                    <th className="text-right px-3 py-2 font-medium text-gray-600">Standart Fiyat</th>
+                    <th className="text-right px-3 py-2 font-medium text-gray-600">Özel Fiyat (₺)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {customerPrices.map((p, i) => (
+                    <tr key={p.product_id} className={p.price !== '' ? 'bg-orange-50' : ''}>
+                      <td className="px-3 py-2">{p.product_name}</td>
+                      <td className="px-3 py-2 text-right text-gray-500">₺{p.standard_price}</td>
+                      <td className="px-3 py-2 text-right">
+                        <input type="number" min="0" step="0.01"
+                          placeholder={`₺${p.standard_price}`}
+                          className="w-28 border rounded px-2 py-1 text-sm text-right"
+                          value={p.price}
+                          onChange={e => {
+                            const updated = [...customerPrices]
+                            updated[i] = { ...updated[i], price: e.target.value }
+                            setCustomerPrices(updated)
+                          }} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex gap-2 p-4 border-t">
+              <button onClick={savePrices} className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 text-sm font-medium">
+                Fiyatları Kaydet
+              </button>
+              <button onClick={() => setPriceModal(false)} className="flex-1 border py-2 rounded-lg text-sm">İptal</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

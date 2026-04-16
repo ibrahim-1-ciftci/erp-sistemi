@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.core.database import get_db
-from app.core.deps import get_current_user, log_activity
+from app.core.deps import get_current_user, check_permission, check_permission, log_activity
 from app.models.bom import BOM, BOMItem
 from app.models.product import Product
 from app.models.raw_material import RawMaterial
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/bom", tags=["bom"])
 def build_bom_out(bom: BOM) -> dict:
     items = []
     total_cost = 0
-    for item in bom.items:
+    for item in sorted(bom.items, key=lambda x: x.order):
         rm = item.raw_material
         cost = rm.purchase_price * item.quantity_required
         total_cost += cost
@@ -25,6 +25,7 @@ def build_bom_out(bom: BOM) -> dict:
             "raw_material_unit": rm.unit,
             "purchase_price": rm.purchase_price,
             "quantity_required": item.quantity_required,
+            "order": item.order,
             "line_cost": cost
         })
     return {
@@ -43,13 +44,13 @@ def list_boms(
     skip: int = 0, limit: int = 20,
     product_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(check_permission("bom", "view"))
 ):
     query = db.query(BOM)
     if product_id:
         query = query.filter(BOM.product_id == product_id)
     total = query.count()
-    boms = query.order_by(BOM.version.desc()).offset(skip).limit(limit).all()
+    boms = query.order_by(BOM.product_id, BOM.version.desc()).offset(skip).limit(limit).all()
     return {"total": total, "items": [build_bom_out(b) for b in boms]}
 
 @router.post("", response_model=dict)
@@ -70,7 +71,8 @@ def create_bom(data: BOMCreate, db: Session = Depends(get_db), current_user: Use
         rm = db.query(RawMaterial).filter(RawMaterial.id == item_data.raw_material_id).first()
         if not rm:
             raise HTTPException(status_code=404, detail=f"Hammadde bulunamadı: {item_data.raw_material_id}")
-        item = BOMItem(bom_id=bom.id, raw_material_id=item_data.raw_material_id, quantity_required=item_data.quantity_required)
+        item = BOMItem(bom_id=bom.id, raw_material_id=item_data.raw_material_id,
+                       quantity_required=item_data.quantity_required, order=item_data.order or 0)
         db.add(item)
     
     db.commit()
@@ -104,7 +106,8 @@ def update_bom(bom_id: int, data: BOMUpdate, db: Session = Depends(get_db), curr
             db.delete(old_item)
         db.flush()
         for item_data in data.items:
-            item = BOMItem(bom_id=bom.id, raw_material_id=item_data.raw_material_id, quantity_required=item_data.quantity_required)
+            item = BOMItem(bom_id=bom.id, raw_material_id=item_data.raw_material_id,
+                           quantity_required=item_data.quantity_required, order=item_data.order or 0)
             db.add(item)
     db.commit()
     db.refresh(bom)

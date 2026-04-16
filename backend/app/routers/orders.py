@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+﻿from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Optional
 from datetime import datetime, timezone
 from app.core.database import get_db
-from app.core.deps import get_current_user, log_activity
+from app.core.deps import get_current_user, check_permission, check_permission, log_activity
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product
 from app.models.user import User
@@ -42,15 +43,25 @@ def build_order_out(order: Order) -> dict:
 def list_orders(
     skip: int = 0, limit: int = 20,
     status: Optional[str] = None,
+    exclude_status: Optional[str] = None,
     search: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(check_permission("orders", "view"))
 ):
+    from datetime import date as dt_date
     query = db.query(Order)
     if status:
         query = query.filter(Order.status == status)
+    if exclude_status:
+        query = query.filter(Order.status != exclude_status)
     if search:
         query = query.filter(Order.customer_name.ilike(f"%{search}%"))
+    if date_from:
+        query = query.filter(func.date(Order.created_at) >= date_from)
+    if date_to:
+        query = query.filter(func.date(Order.created_at) <= date_to)
     total = query.count()
     orders = query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
     return {"total": total, "items": [build_order_out(o) for o in orders]}
@@ -172,11 +183,13 @@ def ship_order(order_id: int, db: Session = Depends(get_db), current_user: User 
                 (item.unit_price or (item.product.sale_price if item.product else 0)) * item.quantity
                 for item in order.items
             )
+            from app.routers.settings import get_setting
+            default_unit = get_setting(db, "default_unit") or "adet"
             items_data = [
                 {
                     "product_name": item.product.name if item.product else "Ürün",
                     "quantity": item.quantity,
-                    "unit": "adet",
+                    "unit": default_unit,
                     "unit_price": item.unit_price or (item.product.sale_price if item.product else 0)
                 }
                 for item in order.items
@@ -202,13 +215,46 @@ def ship_order(order_id: int, db: Session = Depends(get_db), current_user: User 
 
 @router.delete("/{order_id}")
 def delete_order(order_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    from app.models.production import Production
+    from app.models.production import Production, ProductionStatus
     from app.models.payment import Payment
+    from app.models.raw_material import RawMaterial
+    from app.models.stock_movement import StockMovement, MovementType
+    from app.models.bom import BOM
+
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
-    # Bağlı production ve payment kayıtlarını temizle
-    db.query(Production).filter(Production.order_id == order_id).delete()
+
+    # Tamamlanmış üretimlerin stoklarını geri al
+    productions = db.query(Production).filter(Production.order_id == order_id).all()
+    for p in productions:
+        if p.status == ProductionStatus.completed:
+            # Hammaddeleri geri ekle
+            bom = db.query(BOM).filter(BOM.product_id == p.product_id).order_by(BOM.version.desc()).first()
+            if bom:
+                for item in bom.items:
+                    rm = db.query(RawMaterial).filter(RawMaterial.id == item.raw_material_id).first()
+                    if rm:
+                        needed = item.quantity_required * p.quantity
+                        rm.stock_quantity += needed
+                        db.add(StockMovement(
+                            material_id=rm.id,
+                            type=MovementType.in_,
+                            quantity=needed,
+                            description=f"Sipariş #{order_id} silindi — stok iadesi"
+                        ))
+            # Ürün stoğunu düş
+            product = db.query(Product).filter(Product.id == p.product_id).first()
+            if product:
+                product.stock_quantity = max(0, product.stock_quantity - p.quantity)
+                db.add(StockMovement(
+                    product_id=product.id,
+                    type=MovementType.out,
+                    quantity=p.quantity,
+                    description=f"Sipariş #{order_id} silindi — ürün stok iadesi"
+                ))
+        db.delete(p)
+
     db.query(Payment).filter(Payment.order_id == order_id).delete()
     db.delete(order)
     db.commit()

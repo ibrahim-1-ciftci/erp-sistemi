@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional, List
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from app.core.database import get_db
-from app.core.deps import get_current_user, log_activity
+from app.core.deps import get_current_user, check_permission, check_permission, log_activity
 from app.models.debt import Debt, DebtStatus
 from app.models.user import User
 
@@ -57,7 +57,7 @@ def build(d: Debt) -> dict:
     }
 
 @router.get("")
-def list_debts(status: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_debts(status: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(check_permission("debts", "view"))):
     debts = db.query(Debt).order_by(Debt.due_date).all()
     result = [build(d) for d in debts]
     if status:
@@ -77,7 +77,7 @@ def create_debt(data: DebtCreate, db: Session = Depends(get_db), current_user: U
 def update_debt(debt_id: int, data: DebtUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     d = db.query(Debt).filter(Debt.id == debt_id).first()
     if not d: raise HTTPException(404, "Bulunamadı")
-    for k, v in data.model_dump(exclude_none=True).items():
+    for k, v in data.model_dump(exclude_unset=True).items():
         setattr(d, k, v)
     db.commit(); db.refresh(d)
     return build(d)
@@ -89,8 +89,20 @@ def pay_debt(debt_id: int, data: PaymentIn, db: Session = Depends(get_db), curre
     d.paid_amount = (d.paid_amount or 0) + data.amount
     if d.paid_amount >= d.total_amount and not d.paid_date:
         d.paid_date = data.paid_date or date.today()
+
+    # Ödenen tutar otomatik olarak kasadan gider olarak düşülür
+    from app.models.cashflow import CashFlow
+    cashflow_entry = CashFlow(
+        flow_date=data.paid_date or date.today(),
+        flow_type="expense",
+        amount=data.amount,
+        description=f"Borç ödemesi: {d.creditor}" + (f" — {d.description}" if d.description else ""),
+        category="Borç Ödemesi",
+    )
+    db.add(cashflow_entry)
+
     db.commit(); db.refresh(d)
-    log_activity(db, current_user.id, "PAY", "Debt", debt_id, f"Ödeme: {data.amount}")
+    log_activity(db, current_user.id, "PAY", "Debt", debt_id, f"Ödeme: ₺{data.amount} — {d.creditor}")
     return build(d)
 
 @router.delete("/{debt_id}")

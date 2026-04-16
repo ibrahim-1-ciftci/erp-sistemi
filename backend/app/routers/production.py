@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
 from app.core.database import get_db
-from app.core.deps import get_current_user, log_activity
+from app.core.deps import get_current_user, check_permission, check_permission, log_activity
 from app.models.bom import BOM
 from app.models.product import Product
 from app.models.raw_material import RawMaterial
@@ -71,7 +71,7 @@ def list_productions(
     skip: int = 0, limit: int = 20,
     status: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(check_permission("production", "view"))
 ):
     query = db.query(Production)
     if status:
@@ -151,10 +151,39 @@ def get_production(production_id: int, db: Session = Depends(get_db), current_us
 
 @router.delete("/{production_id}")
 def delete_production(production_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Herhangi bir üretim kaydını sil"""
+    """Üretim kaydını sil — tamamlanmış üretimde stoku geri al"""
     p = db.query(Production).filter(Production.id == production_id).first()
     if not p:
         raise HTTPException(status_code=404, detail="Üretim kaydı bulunamadı")
+
+    # Sadece tamamlanmış üretimde stok geri alınır
+    if p.status == ProductionStatus.completed:
+        bom = get_latest_bom(p.product_id, db)
+        if bom:
+            for item in bom.items:
+                rm = db.query(RawMaterial).filter(RawMaterial.id == item.raw_material_id).first()
+                if rm:
+                    needed = item.quantity_required * p.quantity
+                    rm.stock_quantity += needed  # hammaddeyi geri ekle
+                    mv = StockMovement(
+                        material_id=rm.id,
+                        type=MovementType.in_,
+                        quantity=needed,
+                        description=f"Üretim iptali #{production_id} - stok iadesi"
+                    )
+                    db.add(mv)
+        # Ürün stoğunu düş
+        product = db.query(Product).filter(Product.id == p.product_id).first()
+        if product:
+            product.stock_quantity = max(0, product.stock_quantity - p.quantity)
+            mv = StockMovement(
+                product_id=product.id,
+                type=MovementType.out,
+                quantity=p.quantity,
+                description=f"Üretim iptali #{production_id}"
+            )
+            db.add(mv)
+
     db.delete(p)
     db.commit()
     log_activity(db, current_user.id, "DELETE", "Production", production_id)

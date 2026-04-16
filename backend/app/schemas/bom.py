@@ -5,6 +5,7 @@ from datetime import datetime
 class BOMItemBase(BaseModel):
     raw_material_id: int
     quantity_required: float
+    order: Optional[int] = 0
 
 class BOMItemCreate(BOMItemBase):
     pass
