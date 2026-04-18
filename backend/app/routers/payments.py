@@ -214,6 +214,10 @@ def payment_invoice_pdf(
         ("C:/Windows/Fonts/arial.ttf",   "C:/Windows/Fonts/arialbd.ttf"),
         ("C:/Windows/Fonts/calibri.ttf", "C:/Windows/Fonts/calibrib.ttf"),
         ("C:/Windows/Fonts/tahoma.ttf",  "C:/Windows/Fonts/tahomabd.ttf"),
+        ("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
+        ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
     ]:
         if os.path.exists(reg):
             bname = os.path.splitext(os.path.basename(reg))[0].capitalize()

@@ -31,22 +31,29 @@ router = APIRouter(prefix="/invoices", tags=["invoices"])
 COMPANY_NAME = "Laves Kimya"
 COMPANY_SUB  = "Uretim ve Isletme Yonetim Sistemi"
 
-# Windows sistem fontlarından Türkçe destekli font kaydet
+# Windows ve Linux sistem fontlarından Türkçe destekli font kaydet
 def register_turkish_font():
     candidates = [
+        # Windows
         ("C:/Windows/Fonts/arial.ttf",   "C:/Windows/Fonts/arialbd.ttf"),
         ("C:/Windows/Fonts/calibri.ttf", "C:/Windows/Fonts/calibrib.ttf"),
         ("C:/Windows/Fonts/tahoma.ttf",  "C:/Windows/Fonts/tahomabd.ttf"),
+        # Linux - Liberation (Arial muadili, Türkçe destekli)
+        ("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
+        # Linux - DejaVu
+        ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
     ]
     for regular, bold in candidates:
         if os.path.exists(regular):
-            name = os.path.splitext(os.path.basename(regular))[0].capitalize()
+            name = os.path.splitext(os.path.basename(regular))[0]
             try:
                 pdfmetrics.registerFont(TTFont(name, regular))
                 if os.path.exists(bold):
                     pdfmetrics.registerFont(TTFont(name + "-Bold", bold))
                     return name, name + "-Bold"
-                return name, name  # bold yoksa regular kullan
+                return name, name
             except Exception:
                 continue
     return "Helvetica", "Helvetica-Bold"

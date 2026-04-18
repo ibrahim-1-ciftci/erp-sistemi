@@ -56,13 +56,20 @@ def _register_font():
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     candidates = [
+        # Windows
         ("C:/Windows/Fonts/arial.ttf",   "C:/Windows/Fonts/arialbd.ttf"),
         ("C:/Windows/Fonts/calibri.ttf", "C:/Windows/Fonts/calibrib.ttf"),
         ("C:/Windows/Fonts/tahoma.ttf",  "C:/Windows/Fonts/tahomabd.ttf"),
+        # Linux - Liberation
+        ("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
+        # Linux - DejaVu
+        ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
     ]
     for reg, bold in candidates:
         if os.path.exists(reg):
-            name = os.path.splitext(os.path.basename(reg))[0].capitalize()
+            name = os.path.splitext(os.path.basename(reg))[0]
             try:
                 registered = pdfmetrics.getRegisteredFontNames()
                 if name not in registered:
