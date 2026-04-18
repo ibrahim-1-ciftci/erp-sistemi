@@ -172,6 +172,16 @@ def ship_order(order_id: int, db: Session = Depends(get_db), current_user: User 
     order.shipped_at = now
     db.flush()
 
+    # items'ı commit öncesi belleğe al — commit sonrası lazy load sorununu önler
+    order_items_snapshot = [
+        {
+            "product_name": item.product.name if item.product else "Ürün",
+            "quantity": item.quantity,
+            "unit_price": item.unit_price or (item.product.sale_price if item.product else 0),
+        }
+        for item in order.items
+    ]
+
     # Müşterinin vade günü varsa otomatik payment oluştur
     payment_created = False
     if order.customer_id:
@@ -180,19 +190,19 @@ def ship_order(order_id: int, db: Session = Depends(get_db), current_user: User 
             ship_date = now.date()
             due_date = ship_date + timedelta(days=customer.payment_term_days)
             total_value = sum(
-                (item.unit_price or (item.product.sale_price if item.product else 0)) * item.quantity
-                for item in order.items
+                i["unit_price"] * i["quantity"]
+                for i in order_items_snapshot
             )
             from app.routers.settings import get_setting
             default_unit = get_setting(db, "default_unit") or "adet"
             items_data = [
                 {
-                    "product_name": item.product.name if item.product else "Ürün",
-                    "quantity": item.quantity,
+                    "product_name": i["product_name"],
+                    "quantity": i["quantity"],
                     "unit": default_unit,
-                    "unit_price": item.unit_price or (item.product.sale_price if item.product else 0)
+                    "unit_price": i["unit_price"]
                 }
-                for item in order.items
+                for i in order_items_snapshot
             ]
             payment = Payment(
                 order_id=order.id,
@@ -209,8 +219,45 @@ def ship_order(order_id: int, db: Session = Depends(get_db), current_user: User 
     db.commit()
     log_activity(db, current_user.id, "SHIP", "Order", order_id,
                  f"Sevkiyata alındı{'+ vade kaydı oluşturuldu' if payment_created else ''}")
+
+    # Otomatik teslimat fişi oluştur
+    try:
+        from app.models.delivery_note import DeliveryNote
+        from app.routers.settings import get_setting
+        default_unit = get_setting(db, "default_unit") or "adet"
+        year = now.strftime("%Y")
+        count = db.query(DeliveryNote).count() + 1
+        note_number = f"{year}-{count:05d}"
+        dn_items = [
+            {
+                "product_name": i["product_name"],
+                "quantity": i["quantity"],
+                "unit": default_unit,
+            }
+            for i in order_items_snapshot
+        ]
+        dn = DeliveryNote(
+            order_id=order.id,
+            note_number=note_number,
+            customer_name=order.customer_name,
+            customer_phone=order.customer_phone,
+            shipped_at=now,
+            items_json=json.dumps(dn_items, ensure_ascii=False),
+        )
+        db.add(dn)
+        db.commit()
+        db.refresh(dn)
+        delivery_note_id = dn.id
+    except Exception as e:
+        import traceback
+        print(f"[DeliveryNote] Hata: {e}")
+        traceback.print_exc()
+        db.rollback()
+        delivery_note_id = None
+
     result = build_order_out(order)
     result["payment_auto_created"] = payment_created
+    result["delivery_note_id"] = delivery_note_id
     return result
 
 @router.delete("/{order_id}")

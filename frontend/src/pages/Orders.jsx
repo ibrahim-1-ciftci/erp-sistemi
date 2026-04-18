@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import Table from '../components/Table'
 import Modal from '../components/Modal'
 import Pagination from '../components/Pagination'
-import { Plus, Search, Eye, Trash2, Factory, FileText, Truck, Download, ArchiveRestore } from 'lucide-react'
+import { Plus, Search, Eye, Trash2, Factory, FileText, Truck, Download, ArchiveRestore, ClipboardList, Edit2 } from 'lucide-react'
 
 const emptyForm = { customer_id: '', customer_name: '', customer_phone: '', customer_email: '', notes: '', items: [] }
 
@@ -28,6 +28,8 @@ export default function Orders() {
   const [customers, setCustomers] = useState([])
   const [modal, setModal] = useState(null)
   const [viewOrder, setViewOrder] = useState(null)
+  const [deliveryNote, setDeliveryNote] = useState(null)   // görüntüleme/düzenleme
+  const [dnForm, setDnForm] = useState({})                  // düzenleme formu
   const [form, setForm] = useState(emptyForm)
   const [shipModal, setShipModal] = useState(null) // { orderId, totalValue, customerName }
   const [shipVadeForm, setShipVadeForm] = useState({ due_days: 30, create_vade: false })
@@ -191,6 +193,47 @@ export default function Orders() {
     } catch (e) { toast.error(e.response?.data?.detail || 'Hata') }
   }
 
+  // Teslimat fişi aç
+  const openDeliveryNote = async (orderId) => {
+    try {
+      const res = await api.get(`/delivery-notes/order/${orderId}`)
+      setDeliveryNote(res.data)
+      setDnForm({
+        delivery_address: res.data.delivery_address || '',
+        driver_name:      res.data.driver_name || '',
+        driver_phone:     res.data.driver_phone || '',
+        plate:            res.data.plate || '',
+        receiver_name:    res.data.receiver_name || '',
+        receiver_title:   res.data.receiver_title || '',
+        notes:            res.data.notes || '',
+      })
+      setModal('delivery')
+    } catch { toast.error('Teslimat fişi bulunamadı') }
+  }
+
+  const saveDn = async () => {
+    try {
+      await api.put(`/delivery-notes/${deliveryNote.id}`, dnForm)
+      toast.success('Teslimat fişi güncellendi')
+      setModal(null)
+    } catch { toast.error('Hata') }
+  }
+
+  const downloadDnPdf = async (noteId) => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/delivery-notes/${noteId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error()
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `irsaliye_${noteId}.pdf`; a.click()
+      URL.revokeObjectURL(url)
+    } catch { toast.error('PDF oluşturulamadı') }
+  }
+
   const activeColumns = [
     { key: 'id', label: '#', render: r => `#${r.id}` },
     { key: 'customer_name', label: 'Müşteri' },
@@ -220,6 +263,7 @@ export default function Orders() {
       <div className="flex gap-1">
         <button onClick={() => setViewOrder(r)} className="text-blue-600 hover:text-blue-800 p-1"><Eye size={14} /></button>
         <button onClick={() => downloadInvoice(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Fatura İndir"><FileText size={14} /></button>
+        <button onClick={() => openDeliveryNote(r.id)} className="text-teal-600 hover:text-teal-800 p-1" title="Teslimat Fişi"><ClipboardList size={14} /></button>
         <button onClick={() => unarchiveOrder(r.id)} className="text-orange-500 hover:text-orange-700 p-1" title="Arşivden Çıkar"><ArchiveRestore size={14} /></button>
         <button onClick={() => handleDelete(r.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={14} /></button>
       </div>
@@ -553,6 +597,123 @@ export default function Orders() {
             <tfoot><tr><td colSpan={3} className="pt-3 font-semibold">Toplam</td><td className="text-right pt-3 font-bold">₺{viewOrder.total_value?.toFixed(2)}</td></tr></tfoot>
           </table>
         </Modal>
+      )}
+
+      {/* Teslimat Fişi Modalı */}
+      {modal === 'delivery' && deliveryNote && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h2 className="text-lg font-semibold">Teslimat Fişi</h2>
+                <p className="text-xs text-gray-500 mt-0.5">İrsaliye No: {deliveryNote.note_number}</p>
+              </div>
+              <button onClick={() => setModal(null)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Ürün listesi — salt okunur */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Ürünler</p>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Ürün</th>
+                        <th className="text-right px-3 py-2 font-medium text-gray-600">Miktar</th>
+                        <th className="text-right px-3 py-2 font-medium text-gray-600">Birim</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {deliveryNote.items.map((item, i) => (
+                        <tr key={i}>
+                          <td className="px-3 py-2">{item.product_name}</td>
+                          <td className="px-3 py-2 text-right">{item.quantity}</td>
+                          <td className="px-3 py-2 text-right text-gray-500">{item.unit}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Düzenlenebilir alanlar */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Teslimat Adresi</label>
+                <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                  value={dnForm.delivery_address}
+                  onChange={e => setDnForm(f => ({ ...f, delivery_address: e.target.value }))}
+                  placeholder="Teslimat adresi..." />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sürücü Adı</label>
+                  <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                    value={dnForm.driver_name}
+                    onChange={e => setDnForm(f => ({ ...f, driver_name: e.target.value }))}
+                    placeholder="Sürücü adı soyadı" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sürücü Telefonu</label>
+                  <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                    value={dnForm.driver_phone}
+                    onChange={e => setDnForm(f => ({ ...f, driver_phone: e.target.value }))}
+                    placeholder="05xx xxx xx xx" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Araç Plakası</label>
+                <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                  value={dnForm.plate}
+                  onChange={e => setDnForm(f => ({ ...f, plate: e.target.value }))}
+                  placeholder="34 ABC 123" />
+              </div>
+
+              {/* Teslim Alan */}
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Teslim Alan Bilgileri</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Teslim Alan Kişi</label>
+                    <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                      value={dnForm.receiver_name}
+                      onChange={e => setDnForm(f => ({ ...f, receiver_name: e.target.value }))}
+                      placeholder="Ad Soyad" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Unvan / Görev</label>
+                    <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                      value={dnForm.receiver_title}
+                      onChange={e => setDnForm(f => ({ ...f, receiver_title: e.target.value }))}
+                      placeholder="Depo Sorumlusu vb." />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Notlar</label>
+                <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                  value={dnForm.notes}
+                  onChange={e => setDnForm(f => ({ ...f, notes: e.target.value }))}
+                  placeholder="Ek notlar..." />
+              </div>
+            </div>
+
+            <div className="flex gap-2 p-4 border-t">
+              <button onClick={saveDn}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+                Kaydet
+              </button>
+              <button onClick={() => downloadDnPdf(deliveryNote.id)}
+                className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 text-sm">
+                <FileText size={14} /> PDF İndir
+              </button>
+              <button onClick={() => setModal(null)}
+                className="flex-1 border py-2 rounded-lg text-sm">
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

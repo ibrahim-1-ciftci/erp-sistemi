@@ -18,3 +18,4 @@ from app.models.role_permission import RolePermission
 from app.models.custom_role import CustomRole
 from app.models.employee import Employee, EmployeeLeave, SalaryPayment
 from app.models.custom_role import CustomRole
+from app.models.delivery_note import DeliveryNote
