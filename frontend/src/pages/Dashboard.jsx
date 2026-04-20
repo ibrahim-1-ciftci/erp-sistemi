@@ -43,14 +43,27 @@ function KpiCard({ icon: Icon, label, value, sub, color = 'blue', trend }) {
 export default function Dashboard() {
   const [data, setData] = useState(null)
   const [cashDaily, setCashDaily] = useState([])
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    api.get('/reports/dashboard').then(r => setData(r.data))
-    // Son 14 günlük kasa
+    api.get('/reports/dashboard')
+      .then(r => setData(r.data))
+      .catch(() => setError(true))
     const from = new Date(); from.setDate(from.getDate() - 13)
     const dateFrom = from.toISOString().split('T')[0]
-    api.get('/cashflow/daily-summary', { params: { date_from: dateFrom } }).then(r => setCashDaily(r.data))
+    api.get('/cashflow/daily-summary', { params: { date_from: dateFrom } })
+      .then(r => setCashDaily(r.data))
+      .catch(() => {})
   }, [])
+
+  if (error) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <p className="text-gray-500 text-sm">Dashboard verisi yüklenemedi.</p>
+        <p className="text-gray-400 text-xs mt-1">Yetkiniz olmayabilir veya bir hata oluştu.</p>
+      </div>
+    </div>
+  )
 
   if (!data) return (
     <div className="flex items-center justify-center h-64">

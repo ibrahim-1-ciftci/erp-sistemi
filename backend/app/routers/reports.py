@@ -32,7 +32,7 @@ def add_company_header(ws, col_count: int):
 
 
 @router.get("/dashboard")
-def dashboard(db: Session = Depends(get_db), current_user: User = Depends(check_permission("reports", "view"))):
+def dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     from app.models.payment import Payment
     from app.models.debt import Debt
     materials = db.query(RawMaterial).all()
