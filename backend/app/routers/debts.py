@@ -20,6 +20,7 @@ class DebtCreate(BaseModel):
     total_amount: float
     due_date: date
     notes: Optional[str] = None
+    items_json: Optional[str] = None
 
 class DebtUpdate(BaseModel):
     creditor: Optional[str] = None
@@ -29,6 +30,7 @@ class DebtUpdate(BaseModel):
     due_date: Optional[date] = None
     paid_date: Optional[date] = None
     notes: Optional[str] = None
+    items_json: Optional[str] = None
 
 class PaymentIn(BaseModel):
     amount: float
@@ -48,11 +50,17 @@ def build(d: Debt) -> dict:
     status = compute_status(d)
     remaining = d.total_amount - (d.paid_amount or 0)
     overdue_days = (date.today() - d.due_date).days if d.due_date < date.today() and status != DebtStatus.paid else 0
+    import json as _json
+    items = []
+    if d.items_json:
+        try: items = _json.loads(d.items_json)
+        except: items = []
     return {
         "id": d.id, "creditor": d.creditor, "description": d.description,
         "total_amount": d.total_amount, "paid_amount": d.paid_amount or 0,
         "remaining": remaining, "due_date": d.due_date, "paid_date": d.paid_date,
-        "status": status, "notes": d.notes, "created_at": d.created_at,
+        "status": status, "notes": d.notes, "items": items,
+        "items_json": d.items_json, "created_at": d.created_at,
         "overdue_days": overdue_days,
     }
 

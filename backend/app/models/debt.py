@@ -21,4 +21,5 @@ class Debt(Base):
     paid_date    = Column(Date, nullable=True)
     status       = Column(String, default=DebtStatus.pending)
     notes        = Column(String, nullable=True)
+    items_json   = Column(String, nullable=True)   # JSON: [{description, amount}]
     created_at   = Column(DateTime(timezone=True), server_default=func.now())
