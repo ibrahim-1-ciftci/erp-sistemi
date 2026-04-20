@@ -19,7 +19,7 @@ const navItems = [
   { to: '/payments',     icon: CreditCard,      label: 'Vade Takibi',  module: 'payments' },
   { to: '/debts',        icon: Landmark,        label: 'Borç Takibi',  module: 'debts' },
   { to: '/suppliers',    icon: Truck,           label: 'Tedarikçiler', module: 'suppliers' },
-  { to: '/employees',    icon: UserCheck,       label: 'Personel',     module: null },
+  { to: '/employees',    icon: UserCheck,       label: 'Personel',     module: 'employees' },
   { to: '/reports',      icon: BarChart3,       label: 'Raporlar',     module: 'reports' },
   { to: '/settings',     icon: Settings,        label: 'Ayarlar',      module: null },
 ]

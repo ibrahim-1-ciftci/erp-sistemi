@@ -10,7 +10,7 @@ security = HTTPBearer()
 ALL_MODULES = [
     "raw_materials", "products", "bom", "production",
     "orders", "customers", "payments", "debts",
-    "cashflow", "purchases", "suppliers", "reports", "settings"
+    "cashflow", "purchases", "suppliers", "reports", "settings", "employees"
 ]
 
 # Yeni oluşturulan özel roller için varsayılan: hiçbir şeye erişim yok

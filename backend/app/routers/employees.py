@@ -9,7 +9,7 @@ from pydantic import BaseModel
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from app.core.database import get_db
-from app.core.deps import get_current_user, log_activity
+from app.core.deps import get_current_user, log_activity, check_permission
 from app.models.employee import Employee, EmployeeLeave, SalaryPayment
 from app.models.cashflow import CashFlow
 from app.models.user import User
@@ -120,7 +120,7 @@ def list_employees(
     department: Optional[str] = None,
     status: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(check_permission("employees", "view"))
 ):
     query = db.query(Employee)
     if search:
