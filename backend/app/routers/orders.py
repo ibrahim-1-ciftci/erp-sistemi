@@ -105,8 +105,30 @@ def update_order(order_id: int, data: OrderUpdate, db: Session = Depends(get_db)
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
-    for key, value in data.model_dump(exclude_none=True).items():
+
+    # Temel alanları güncelle
+    for key, value in data.model_dump(exclude_none=True, exclude={'items'}).items():
         setattr(order, key, value)
+
+    # Kalemleri güncelle
+    if data.items is not None:
+        # Mevcut kalemleri sil
+        for item in order.items:
+            db.delete(item)
+        db.flush()
+        # Yeni kalemleri ekle
+        for item_data in data.items:
+            product = db.query(Product).filter(Product.id == item_data.product_id).first()
+            if not product:
+                raise HTTPException(status_code=404, detail=f"Ürün bulunamadı: {item_data.product_id}")
+            item = OrderItem(
+                order_id=order.id,
+                product_id=item_data.product_id,
+                quantity=item_data.quantity,
+                unit_price=item_data.unit_price or product.sale_price
+            )
+            db.add(item)
+
     db.commit()
     db.refresh(order)
     log_activity(db, current_user.id, "UPDATE", "Order", order_id)

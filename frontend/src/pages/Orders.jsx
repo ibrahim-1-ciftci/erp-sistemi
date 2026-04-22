@@ -219,10 +219,21 @@ export default function Orders() {
         customer_phone: form.customer_phone,
         customer_email: form.customer_email,
         notes: form.notes,
+        items: form.items.map(i => ({
+          product_id: Number(i.product_id),
+          quantity: Number(i.quantity),
+          unit_price: Number(i.unit_price)
+        }))
       })
       toast.success('Sipariş güncellendi'); setModal(null); setEditOrder(null); load()
     } catch (e) { toast.error(e.response?.data?.detail || 'Hata') }
   }
+
+  const updateEditItem = (i, key, val) => setForm(f => {
+    const items = [...f.items]; items[i] = { ...items[i], [key]: val }; return { ...f, items }
+  })
+  const removeEditItem = i => setForm(f => ({ ...f, items: f.items.filter((_, idx) => idx !== i) }))
+  const addEditItem = () => setForm(f => ({ ...f, items: [...f.items, { product_id: '', quantity: 1, unit_price: '' }] }))
 
   // Teslimat fişi aç
   const openDeliveryNote = async (orderId) => {
@@ -564,14 +575,76 @@ export default function Orders() {
               <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
                 value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
             </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs font-semibold text-gray-500 mb-2">ÜRÜNLER (değiştirilemez)</p>
-              {editOrder.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm py-1">
-                  <span>{item.product_name}</span>
-                  <span className="text-gray-500">{item.quantity} adet · ₺{item.unit_price?.toFixed(2)}</span>
-                </div>
-              ))}
+
+            {/* Düzenlenebilir ürün kalemleri */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold">Ürünler</label>
+                <button onClick={addEditItem} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                  <Plus size={12}/> Kalem Ekle
+                </button>
+              </div>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium text-gray-600">Ürün</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">Miktar</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-600 w-28">Birim Fiyat</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-600 w-24">Toplam</th>
+                      <th className="w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {form.items.map((item, i) => {
+                      const prod = products.find(p => p.id === Number(item.product_id))
+                      return (
+                        <tr key={i}>
+                          <td className="px-2 py-1.5">
+                            <select className="w-full border rounded px-2 py-1 text-sm"
+                              value={item.product_id}
+                              onChange={e => {
+                                const p = products.find(p => p.id === Number(e.target.value))
+                                updateEditItem(i, 'product_id', e.target.value)
+                                if (p) updateEditItem(i, 'unit_price', p.sale_price)
+                              }}>
+                              <option value="">Seçin</option>
+                              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <input type="number" min="0" className="w-full border rounded px-2 py-1 text-sm"
+                              value={item.quantity} onChange={e => updateEditItem(i, 'quantity', e.target.value)} />
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <input type="number" min="0" step="0.01" className="w-full border rounded px-2 py-1 text-sm"
+                              value={item.unit_price} onChange={e => updateEditItem(i, 'unit_price', e.target.value)} />
+                          </td>
+                          <td className="px-2 py-1.5 text-gray-600 font-medium">
+                            ₺{((Number(item.quantity)||0)*(Number(item.unit_price)||0)).toLocaleString('tr-TR',{maximumFractionDigits:2})}
+                          </td>
+                          <td className="px-2 py-1.5">
+                            {form.items.length > 1 && (
+                              <button onClick={() => removeEditItem(i)} className="text-red-400 hover:text-red-600">
+                                <Trash2 size={13}/>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-50 border-t">
+                      <td colSpan={3} className="px-3 py-2 text-right font-semibold text-sm">Genel Toplam:</td>
+                      <td className="px-3 py-2 font-bold text-blue-600">
+                        ₺{form.items.reduce((s,i)=>s+(Number(i.quantity)||0)*(Number(i.unit_price)||0),0).toLocaleString('tr-TR',{maximumFractionDigits:2})}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
           <div className="flex gap-2 mt-4">

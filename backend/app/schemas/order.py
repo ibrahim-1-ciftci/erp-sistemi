@@ -30,8 +30,9 @@ class OrderUpdate(BaseModel):
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_email: Optional[str] = None
-    status: Optional[OrderStatus] = None
+    status: Optional[str] = None
     notes: Optional[str] = None
+    items: Optional[List[OrderItemCreate]] = None  # kalem güncelleme
 
 class OrderOut(BaseModel):
     id: int
