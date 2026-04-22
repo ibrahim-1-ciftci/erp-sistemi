@@ -276,7 +276,7 @@ export default function Orders() {
       <div className="flex gap-1">
         <button onClick={() => setViewOrder(r)} className="text-blue-600 hover:text-blue-800 p-1"><Eye size={14} /></button>
         <button onClick={() => downloadInvoice(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Fatura İndir"><FileText size={14} /></button>
-        {r.status === 'pending' && <button onClick={() => openEditOrder(r)} className="text-gray-500 hover:text-gray-700 p-1" title="Düzenle"><Edit2 size={14} /></button>}
+        <button onClick={() => openEditOrder(r)} className="text-gray-500 hover:text-gray-700 p-1" title="Düzenle"><Edit2 size={14} /></button>
         {r.status === 'pending' && <button onClick={() => sendToProduction(r.id)} className="text-orange-500 hover:text-orange-700 p-1" title="Üretime Al"><Factory size={14} /></button>}
         {r.status === 'in_production' && <button onClick={() => completeOrder(r.id)} className="text-green-600 hover:text-green-800 p-1 text-xs font-medium" title="Tamamla">✓</button>}
         {(r.status === 'completed' || r.status === 'in_production') && <button onClick={() => shipOrder(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Sevkiyata Al"><Truck size={14} /></button>}
