@@ -33,6 +33,7 @@ export default function Orders() {
   const [form, setForm] = useState(emptyForm)
   const [shipModal, setShipModal] = useState(null) // { orderId, totalValue, customerName }
   const [shipVadeForm, setShipVadeForm] = useState({ due_days: 30, create_vade: false })
+  const [editOrder, setEditOrder] = useState(null)
   const limit = 15
 
   const load = () => {
@@ -193,6 +194,36 @@ export default function Orders() {
     } catch (e) { toast.error(e.response?.data?.detail || 'Hata') }
   }
 
+  const openEditOrder = (order) => {
+    setEditOrder(order)
+    setForm({
+      customer_id: order.customer_id || '',
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone || '',
+      customer_email: order.customer_email || '',
+      notes: order.notes || '',
+      items: order.items.map(i => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+        unit_price: i.unit_price
+      }))
+    })
+    setModal('edit')
+  }
+
+  const handleEdit = async () => {
+    if (!form.customer_name || form.items.length === 0) return toast.error('Müşteri adı ve en az bir ürün gerekli')
+    try {
+      await api.put(`/orders/${editOrder.id}`, {
+        customer_name: form.customer_name,
+        customer_phone: form.customer_phone,
+        customer_email: form.customer_email,
+        notes: form.notes,
+      })
+      toast.success('Sipariş güncellendi'); setModal(null); setEditOrder(null); load()
+    } catch (e) { toast.error(e.response?.data?.detail || 'Hata') }
+  }
+
   // Teslimat fişi aç
   const openDeliveryNote = async (orderId) => {
     try {
@@ -245,6 +276,7 @@ export default function Orders() {
       <div className="flex gap-1">
         <button onClick={() => setViewOrder(r)} className="text-blue-600 hover:text-blue-800 p-1"><Eye size={14} /></button>
         <button onClick={() => downloadInvoice(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Fatura İndir"><FileText size={14} /></button>
+        {r.status === 'pending' && <button onClick={() => openEditOrder(r)} className="text-gray-500 hover:text-gray-700 p-1" title="Düzenle"><Edit2 size={14} /></button>}
         {r.status === 'pending' && <button onClick={() => sendToProduction(r.id)} className="text-orange-500 hover:text-orange-700 p-1" title="Üretime Al"><Factory size={14} /></button>}
         {r.status === 'in_production' && <button onClick={() => completeOrder(r.id)} className="text-green-600 hover:text-green-800 p-1 text-xs font-medium" title="Tamamla">✓</button>}
         {(r.status === 'completed' || r.status === 'in_production') && <button onClick={() => shipOrder(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Sevkiyata Al"><Truck size={14} /></button>}
@@ -506,9 +538,51 @@ export default function Orders() {
         </div>
       )}
 
+      {/* Sipariş Düzenle Modalı */}
+      {modal === 'edit' && editOrder && (
+        <Modal title={`Sipariş Düzenle #${editOrder.id}`} onClose={() => { setModal(null); setEditOrder(null) }}>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Müşteri Adı *</label>
+              <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                value={form.customer_name} onChange={e => setForm({...form, customer_name: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Telefon</label>
+                <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                  value={form.customer_phone} onChange={e => setForm({...form, customer_phone: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">E-posta</label>
+                <input className="w-full border rounded-lg px-3 py-2 text-sm"
+                  value={form.customer_email} onChange={e => setForm({...form, customer_email: e.target.value})} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Notlar</label>
+              <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs font-semibold text-gray-500 mb-2">ÜRÜNLER (değiştirilemez)</p>
+              {editOrder.items.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm py-1">
+                  <span>{item.product_name}</span>
+                  <span className="text-gray-500">{item.quantity} adet · ₺{item.unit_price?.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button onClick={handleEdit} className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm">Kaydet</button>
+            <button onClick={() => { setModal(null); setEditOrder(null) }} className="flex-1 border py-2 rounded-lg text-sm">İptal</button>
+          </div>
+        </Modal>
+      )}
+
       {/* Sevkiyat Vade Modalı */}
-      {shipModal && (
-        <Modal title={`Sevkiyat — ${shipModal.customerName}`} onClose={() => setShipModal(null)}>
+      {shipModal && (        <Modal title={`Sevkiyat — ${shipModal.customerName}`} onClose={() => setShipModal(null)}>
           <div className="space-y-4">
             <div className="rounded-lg p-3 text-sm" style={{ backgroundColor: 'var(--bg-table-head)', border: '1px solid var(--border)' }}>
               <p style={{ color: 'var(--text-secondary)' }}>Bu müşteri için otomatik vade tanımlı değil.</p>
