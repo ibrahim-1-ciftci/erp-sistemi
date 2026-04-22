@@ -233,6 +233,19 @@ export default function Payments() {
         <h1 className="text-2xl font-bold">Vade & Ödeme Takibi</h1>
         <div className="flex gap-2">
           {checkedIds.size > 0 && (
+            <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+              <span className="text-sm text-blue-700 font-medium">
+                {checkedIds.size} seçili
+              </span>
+              <span className="text-lg font-bold text-blue-800">
+                ₺{payments
+                  .filter(p => checkedIds.has(p.id))
+                  .reduce((s, p) => s + (p.remaining || 0), 0)
+                  .toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
+          {checkedIds.size > 0 && (
             <button onClick={downloadSelectedPdf}
               className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm">
               <FileText size={15} /> {checkedIds.size} Kayıt PDF
