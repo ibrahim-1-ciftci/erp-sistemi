@@ -269,18 +269,38 @@ export default function Payments() {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
             <div className="p-2 bg-yellow-50 rounded-lg"><Clock size={20} className="text-yellow-600" /></div>
-            <div><p className="text-xs text-gray-500">Bekleyen Alacak</p>
-              <p className="text-xl font-bold">₺{summary.total_pending?.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p></div>
+            <div>
+              <p className="text-xs text-gray-500">
+                {statusFilter === 'pending' ? 'Bekleyenlerin Toplamı'
+                  : statusFilter === 'overdue' ? 'Gecikmiş Toplamı'
+                  : statusFilter === 'partial' ? 'Kısmi Ödeme Toplamı'
+                  : 'Bekleyen Alacak'}
+              </p>
+              <p className="text-xl font-bold">
+                ₺{payments.reduce((s, p) => s + (p.remaining || 0), 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+              </p>
+              {statusFilter && <p className="text-xs text-gray-400">{payments.length} kayıt</p>}
+            </div>
           </div>
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
             <div className="p-2 bg-red-50 rounded-lg"><AlertTriangle size={20} className="text-red-600" /></div>
             <div><p className="text-xs text-gray-500">Gecikmiş</p>
-              <p className="text-xl font-bold text-red-600">{summary.overdue_count} adet</p></div>
+              <p className="text-xl font-bold text-red-600">{summary.overdue_count} adet</p>
+              <p className="text-xs text-gray-400">
+                ₺{payments.filter(p => p.status === 'overdue').reduce((s, p) => s + (p.remaining || 0), 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+              </p>
+            </div>
           </div>
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
             <div className="p-2 bg-green-50 rounded-lg"><CheckCircle size={20} className="text-green-600" /></div>
-            <div><p className="text-xs text-gray-500">Toplam Kayıt</p>
-              <p className="text-xl font-bold">{payments.length}</p></div>
+            <div><p className="text-xs text-gray-500">
+              {statusFilter ? `Filtredeki Kayıt` : 'Toplam Kayıt'}
+            </p>
+              <p className="text-xl font-bold">{payments.length}</p>
+              {!statusFilter && <p className="text-xs text-gray-400">
+                Toplam: ₺{payments.reduce((s, p) => s + (p.total_amount || 0), 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+              </p>}
+            </div>
           </div>
         </div>
       )}
