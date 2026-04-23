@@ -84,8 +84,20 @@ def build_out(p: Payment) -> dict:
     }
 
 @router.get("")
-def list_payments(status: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(check_permission("payments", "view"))):
-    payments = db.query(Payment).order_by(Payment.due_date).all()
+def list_payments(
+    status: Optional[str] = None,
+    sort_by: Optional[str] = "due_date",   # due_date | created_at
+    sort_dir: Optional[str] = "asc",       # asc | desc
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_permission("payments", "view"))
+):
+    payments = db.query(Payment)
+    # Sıralama
+    from sqlalchemy import asc, desc
+    col_map = {"due_date": Payment.due_date, "created_at": Payment.created_at}
+    col = col_map.get(sort_by, Payment.due_date)
+    payments = payments.order_by(desc(col) if sort_dir == "desc" else asc(col))
+    payments = payments.all()
     result = [build_out(p) for p in payments]
     if status:
         result = [r for r in result if r["status"] == status]

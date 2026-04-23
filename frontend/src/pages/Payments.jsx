@@ -33,6 +33,8 @@ export default function Payments() {
   const [calMonth, setCalMonth] = useState(today.getMonth() + 1)
   const [orders, setOrders] = useState([])
   const [statusFilter, setStatusFilter] = useState('')
+  const [sortBy, setSortBy] = useState('due_date')     // due_date | created_at
+  const [sortDir, setSortDir] = useState('asc')        // asc | desc
   const [modal, setModal] = useState(null)
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -55,14 +57,14 @@ export default function Payments() {
 
   const loadList = () => {
     const statusParam = tab === 'archive' ? 'paid' : (statusFilter || undefined)
-    api.get('/payments', { params: { status: statusParam } })
+    api.get('/payments', { params: { status: statusParam, sort_by: sortBy, sort_dir: sortDir } })
       .then(r => {
         let items = r.data.items
         if (tab === 'active' && !statusFilter) {
           items = items.filter(p => p.status !== 'paid')
         }
         setPayments(items)
-        setCheckedIds(new Set()) // sekme değişince seçimi temizle
+        setCheckedIds(new Set())
         setSummary({ total_pending: r.data.total_pending, overdue_count: r.data.overdue_count })
       })
   }
@@ -71,7 +73,7 @@ export default function Payments() {
     api.get('/payments/calendar', { params: { year: calYear, month: calMonth } })
       .then(r => setCalData(r.data.by_day || {}))
 
-  useEffect(() => { loadList() }, [statusFilter, tab])
+  useEffect(() => { loadList() }, [statusFilter, tab, sortBy, sortDir])
   useEffect(() => { loadCal() }, [calYear, calMonth])
   useEffect(() => { api.get('/orders', { params: { limit: 200 } }).then(r => setOrders(r.data.items)) }, [])
 
@@ -331,6 +333,18 @@ export default function Payments() {
             <option value="overdue">Gecikmiş</option>
             <option value="partial">Kısmi Ödeme</option>
           </select>
+        )}
+        {view === 'list' && (
+          <div className="flex items-center gap-2 ml-auto">
+            <select className="border rounded-lg px-3 py-2 text-sm" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="due_date">Vade Tarihine Göre</option>
+              <option value="created_at">Kayıt Tarihine Göre</option>
+            </select>
+            <button onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+              className="border rounded-lg px-3 py-2 text-sm flex items-center gap-1 bg-white hover:bg-gray-50">
+              {sortDir === 'asc' ? '↑ Eskiden Yeniye' : '↓ Yeniden Eskiye'}
+            </button>
+          </div>
         )}
       </div>
 

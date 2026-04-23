@@ -51,7 +51,10 @@ def list_boms(
         query = query.filter(BOM.product_id == product_id)
     total = query.count()
     boms = query.order_by(BOM.product_id, BOM.version.desc()).offset(skip).limit(limit).all()
-    return {"total": total, "items": [build_bom_out(b) for b in boms]}
+    # Ürün adına göre alfabetik grupla
+    result = [build_bom_out(b) for b in boms]
+    result.sort(key=lambda x: (x['product_name'] or '').lower())
+    return {"total": total, "items": result}
 
 @router.post("", response_model=dict)
 def create_bom(data: BOMCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
