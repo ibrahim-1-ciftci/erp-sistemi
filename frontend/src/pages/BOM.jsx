@@ -326,6 +326,11 @@ export default function BOMPage() {
     return acc
   }, {})
 
+  // Ürün adına göre alfabetik sırala
+  const groupedSorted = Object.entries(grouped).sort((a, b) =>
+    (a[1].name || '').localeCompare(b[1].name || '', 'tr')
+  )
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -337,7 +342,7 @@ export default function BOMPage() {
       </div>
 
       <div className="space-y-4">
-        {Object.entries(grouped).map(([pid, { name, versions }]) => (
+        {groupedSorted.map(([pid, { name, versions }]) => (
           <div key={pid} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h3 className="font-semibold text-gray-800 mb-3">{name}</h3>
             <div className="space-y-2">
