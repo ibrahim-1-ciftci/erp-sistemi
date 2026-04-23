@@ -254,6 +254,7 @@ export default function BOMPage() {
   const [boms, setBoms] = useState([])
   const [products, setProducts] = useState([])
   const [materials, setMaterials] = useState([])
+  const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null) // null | 'create' | 'edit'
   const [viewBom, setViewBom] = useState(null)
   const [editBom, setEditBom] = useState(null)
@@ -326,19 +327,30 @@ export default function BOMPage() {
     return acc
   }, {})
 
-  // Ürün adına göre alfabetik sırala
-  const groupedSorted = Object.entries(grouped).sort((a, b) =>
-    (a[1].name || '').localeCompare(b[1].name || '', 'tr')
-  )
+  // Ürün adına göre alfabetik sırala + arama filtresi
+  const groupedSorted = Object.entries(grouped)
+    .filter(([, { name }]) => !search || (name || '').toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => (a[1].name || '').localeCompare(b[1].name || '', 'tr'))
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Reçeteler (BOM)</h1>
-        <button onClick={() => { setForm(emptyForm); setModal('create') }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
-          <Plus size={16} /> Yeni Reçete
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
+            <input
+              placeholder="Ürün ara..."
+              className="pl-9 border rounded-lg px-3 py-2 text-sm w-48"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <button onClick={() => { setForm(emptyForm); setModal('create') }}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+            <Plus size={16} /> Yeni Reçete
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
