@@ -93,6 +93,14 @@ export default function Orders() {
       }
     }
     setForm(f => ({ ...f, customer_id: c.id, customer_name: c.name, customer_phone: c.phone || '', customer_email: c.email || '', items: updatedItems }))
+    // Özel reçete kontrolü
+    try {
+      const bomsRes = await api.get(`/customers/${c.id}/boms`)
+      if (bomsRes.data.length > 0) {
+        const names = bomsRes.data.map(b => b.product_name).join(', ')
+        toast(`⚗️ Bu müşteri için özel reçete tanımlı: ${names}`, { duration: 4000, icon: '⚗️' })
+      }
+    } catch {}
   }
 
   const handleSave = async () => {

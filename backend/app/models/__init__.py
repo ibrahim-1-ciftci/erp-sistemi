@@ -19,3 +19,4 @@ from app.models.custom_role import CustomRole
 from app.models.employee import Employee, EmployeeLeave, SalaryPayment
 from app.models.custom_role import CustomRole
 from app.models.delivery_note import DeliveryNote
+from app.models.customer_bom import CustomerBOM

@@ -14,7 +14,16 @@ from app.schemas.production import ProductionCreate, ProductionOut
 
 router = APIRouter(prefix="/production", tags=["production"])
 
-def get_latest_bom(product_id: int, db: Session):
+def get_latest_bom(product_id: int, db: Session, customer_id: int = None):
+    """Müşteriye özel reçete varsa onu, yoksa en son versiyonu döner."""
+    if customer_id:
+        from app.models.customer_bom import CustomerBOM
+        cb = db.query(CustomerBOM).filter(
+            CustomerBOM.customer_id == customer_id,
+            CustomerBOM.product_id == product_id
+        ).first()
+        if cb:
+            return db.query(BOM).filter(BOM.id == cb.bom_id).first()
     return db.query(BOM).filter(BOM.product_id == product_id).order_by(BOM.version.desc()).first()
 
 def calculate_cost(bom: BOM, quantity: float) -> tuple[float, list, list]:
@@ -40,11 +49,11 @@ def calculate_cost(bom: BOM, quantity: float) -> tuple[float, list, list]:
     return total_cost, materials_needed, missing
 
 @router.get("/preview")
-def preview_production(product_id: int, quantity: float, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def preview_production(product_id: int, quantity: float, customer_id: Optional[int] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Ürün bulunamadı")
-    bom = get_latest_bom(product_id, db)
+    bom = get_latest_bom(product_id, db, customer_id=customer_id)
     if not bom:
         raise HTTPException(status_code=404, detail="Bu ürün için reçete bulunamadı")
     
@@ -90,7 +99,7 @@ def create_production(data: ProductionCreate, db: Session = Depends(get_db), cur
     product = db.query(Product).filter(Product.id == data.product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Ürün bulunamadı")
-    bom = get_latest_bom(data.product_id, db)
+    bom = get_latest_bom(data.product_id, db, customer_id=data.customer_id)
     if not bom:
         raise HTTPException(status_code=404, detail="Bu ürün için reçete bulunamadı")
     

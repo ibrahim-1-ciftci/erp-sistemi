@@ -209,4 +209,54 @@ def get_price_for_product(customer_id: int, product_id: int,
     }
 
 
+# ── Müşteri Özel Reçeteleri ────────────────────────────────────────────────
+
+class CustomerBOMSet(BaseModel):
+    product_id: int
+    bom_id: int
+
+@router.get("/{customer_id}/boms")
+def get_customer_boms(customer_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from app.models.customer_bom import CustomerBOM
+    from app.models.bom import BOM
+    rows = db.query(CustomerBOM).filter(CustomerBOM.customer_id == customer_id).all()
+    return [{
+        "id": r.id,
+        "product_id": r.product_id,
+        "product_name": r.product.name if r.product else None,
+        "bom_id": r.bom_id,
+        "bom_version": r.bom.version if r.bom else None,
+        "bom_notes": r.bom.notes if r.bom else None,
+    } for r in rows]
+
+@router.put("/{customer_id}/boms")
+def set_customer_boms(customer_id: int, boms: list[CustomerBOMSet],
+                      db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from app.models.customer_bom import CustomerBOM
+    c = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not c: raise HTTPException(404, "Müşteri bulunamadı")
+    db.query(CustomerBOM).filter(CustomerBOM.customer_id == customer_id).delete()
+    for b in boms:
+        db.add(CustomerBOM(customer_id=customer_id, product_id=b.product_id, bom_id=b.bom_id))
+    db.commit()
+    return {"message": f"{len(boms)} özel reçete kaydedildi"}
+
+@router.get("/{customer_id}/bom-for/{product_id}")
+def get_bom_for_product(customer_id: int, product_id: int,
+                        db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Üretim başlatılırken kullanılır — özel reçete varsa onu döner"""
+    from app.models.customer_bom import CustomerBOM
+    from app.models.bom import BOM
+    cb = db.query(CustomerBOM).filter(
+        CustomerBOM.customer_id == customer_id,
+        CustomerBOM.product_id == product_id
+    ).first()
+    if cb:
+        return {"bom_id": cb.bom_id, "is_custom": True, "version": cb.bom.version if cb.bom else None}
+    # Varsayılan: en son versiyon
+    bom = db.query(BOM).filter(BOM.product_id == product_id).order_by(BOM.version.desc()).first()
+    if not bom: raise HTTPException(404, "Reçete bulunamadı")
+    return {"bom_id": bom.id, "is_custom": False, "version": bom.version}
+
+
 

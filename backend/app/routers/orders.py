@@ -160,7 +160,6 @@ def send_to_production(order_id: int, db: Session = Depends(get_db), current_use
             notes=f"Sipariş #{order.id} - {order.customer_name}"
         )
         db.add(production)
-
     db.commit()
     log_activity(db, current_user.id, "PRODUCTION_START", "Order", order_id, "Sipariş üretime alındı")
     return build_order_out(order)

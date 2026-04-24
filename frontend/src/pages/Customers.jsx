@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import Table from '../components/Table'
 import Modal from '../components/Modal'
 import Pagination from '../components/Pagination'
-import { Plus, Search, Eye, Trash2, Edit2, User, Download, Tag } from 'lucide-react'
+import { Plus, Search, Eye, Trash2, Edit2, User, Download, Tag, BookOpen } from 'lucide-react'
 
 const emptyForm = { name: '', phone: '', email: '', address: '', notes: '', payment_term_days: '' }
 
@@ -23,6 +23,10 @@ export default function Customers() {
   const [modal, setModal] = useState(null)
   const [priceModal, setPriceModal] = useState(false)
   const [priceCustomer, setPriceCustomer] = useState(null)
+  const [bomModal, setBomModal] = useState(false)
+  const [bomCustomer, setBomCustomer] = useState(null)
+  const [customerBoms, setCustomerBoms] = useState([])
+  const [allBoms, setAllBoms] = useState([]) // tüm ürün+bom listesi
   const [products, setProducts] = useState([])
   const [customerPrices, setCustomerPrices] = useState([]) // [{product_id, price}]
   const [form, setForm] = useState(emptyForm)
@@ -37,15 +41,14 @@ export default function Customers() {
 
   useEffect(() => { load() }, [page, search])
   useEffect(() => { api.get('/products', { params: { limit: 200 } }).then(r => setProducts(r.data.items)) }, [])
+  useEffect(() => { api.get('/bom', { params: { limit: 500 } }).then(r => setAllBoms(r.data.items)) }, [])
 
   const openPrices = async (c) => {
     setPriceCustomer(c)
     const res = await api.get(`/customers/${c.id}/prices`)
-    // Tüm ürünleri göster, özel fiyatı olanlar dolu gelsin
     const priceMap = {}
     res.data.forEach(p => { priceMap[p.product_id] = p.price })
     setPriceModal(true)
-    // customerPrices: tüm ürünler için satır, özel fiyat varsa dolu
     const allProducts = (await api.get('/products', { params: { limit: 200 } })).data.items
     setCustomerPrices(allProducts.map(p => ({
       product_id: p.id,
@@ -53,6 +56,38 @@ export default function Customers() {
       standard_price: p.sale_price,
       price: priceMap[p.id] !== undefined ? priceMap[p.id] : ''
     })))
+  }
+
+  const openBoms = async (c) => {
+    setBomCustomer(c)
+    const res = await api.get(`/customers/${c.id}/boms`)
+    // Mevcut özel reçeteleri map'e al
+    const bomMap = {}
+    res.data.forEach(b => { bomMap[b.product_id] = b.bom_id })
+    // Reçetesi olan tüm ürünleri listele
+    const bomsRes = await api.get('/bom', { params: { limit: 500 } })
+    const productMap = {}
+    bomsRes.data.items.forEach(b => {
+      if (!productMap[b.product_id]) productMap[b.product_id] = { product_name: b.product_name, versions: [] }
+      productMap[b.product_id].versions.push({ bom_id: b.id, version: b.version, notes: b.notes })
+    })
+    setCustomerBoms(Object.entries(productMap).map(([pid, data]) => ({
+      product_id: Number(pid),
+      product_name: data.product_name,
+      versions: data.versions,
+      selected_bom_id: bomMap[Number(pid)] || ''
+    })))
+    setBomModal(true)
+  }
+
+  const saveBoms = async () => {
+    const toSave = customerBoms.filter(b => b.selected_bom_id)
+    try {
+      await api.put(`/customers/${bomCustomer.id}/boms`,
+        toSave.map(b => ({ product_id: b.product_id, bom_id: Number(b.selected_bom_id) })))
+      toast.success('Özel reçeteler kaydedildi')
+      setBomModal(false)
+    } catch (e) { toast.error(e.response?.data?.detail || 'Hata') }
   }
 
   const savePrices = async () => {
@@ -124,6 +159,7 @@ export default function Customers() {
         <button onClick={() => openView(r)} className="text-blue-600 hover:text-blue-800 p-1"><Eye size={14} /></button>
         <button onClick={() => openEdit(r)} className="text-gray-500 hover:text-gray-700 p-1"><Edit2 size={14} /></button>
         <button onClick={() => openPrices(r)} className="text-orange-500 hover:text-orange-700 p-1" title="Özel Fiyatlar"><Tag size={14} /></button>
+        <button onClick={() => openBoms(r)} className="text-green-600 hover:text-green-800 p-1" title="Özel Reçeteler"><BookOpen size={14} /></button>
         <button onClick={() => handleDelete(r.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={14} /></button>
       </div>
     )}
@@ -282,6 +318,64 @@ export default function Customers() {
                 Fiyatları Kaydet
               </button>
               <button onClick={() => setPriceModal(false)} className="flex-1 border py-2 rounded-lg text-sm">İptal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Özel Reçete Modalı */}
+      {bomModal && bomCustomer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h2 className="text-lg font-semibold">Özel Reçeteler — {bomCustomer.name}</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Boş bırakılan ürünlerde standart (en son) reçete kullanılır</p>
+              </div>
+              <button onClick={() => setBomModal(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4">
+              {customerBoms.length === 0 && (
+                <p className="text-gray-400 text-sm text-center py-8">Reçetesi olan ürün bulunamadı</p>
+              )}
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium text-gray-600">Ürün</th>
+                    <th className="text-left px-3 py-2 font-medium text-gray-600">Kullanılacak Reçete</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {customerBoms.map((b, i) => (
+                    <tr key={b.product_id} className={b.selected_bom_id ? 'bg-green-50' : ''}>
+                      <td className="px-3 py-2 font-medium">{b.product_name}</td>
+                      <td className="px-3 py-2">
+                        <select
+                          className="w-full border rounded px-2 py-1.5 text-sm"
+                          value={b.selected_bom_id}
+                          onChange={e => {
+                            const updated = [...customerBoms]
+                            updated[i] = { ...updated[i], selected_bom_id: e.target.value }
+                            setCustomerBoms(updated)
+                          }}>
+                          <option value="">— Standart (en son versiyon) —</option>
+                          {b.versions.map(v => (
+                            <option key={v.bom_id} value={v.bom_id}>
+                              Versiyon {v.version}{v.notes ? ` — ${v.notes}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex gap-2 p-4 border-t">
+              <button onClick={saveBoms} className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 text-sm font-medium">
+                Reçeteleri Kaydet
+              </button>
+              <button onClick={() => setBomModal(false)} className="flex-1 border py-2 rounded-lg text-sm">İptal</button>
             </div>
           </div>
         </div>

@@ -125,8 +125,8 @@ export default function Debts() {
   const activeColumns = [
     { key: 'creditor',     label: 'Alacaklı',    render: r => <span className="font-medium">{r.creditor}</span> },
     { key: 'description',  label: 'Açıklama',    render: r => r.description || '-' },
-    { key: 'items',        label: 'Kalemler',     render: r => (r.items || []).length > 0
-      ? <span className="text-xs text-gray-500">{(r.items || []).map(i => i.description).filter(Boolean).join(', ') || `${r.items.length} kalem`}</span>
+    { key: 'items',        label: 'Kalemler',     render: r => r.items?.length > 0
+      ? <span className="text-xs text-gray-500">{r.items.map(i => i.description).filter(Boolean).join(', ') || `${r.items.length} kalem`}</span>
       : <span className="text-gray-300 text-xs">-</span>
     },
     { key: 'total_amount', label: 'Toplam',       render: r => `₺${r.total_amount?.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}` },
@@ -366,7 +366,7 @@ export default function Debts() {
             <p><span className="text-gray-500">Ödenen:</span> ₺{selected.paid_amount?.toFixed(2)}</p>
             <p className="font-medium"><span className="text-gray-500">Kalan:</span> ₺{selected.remaining?.toFixed(2)}</p>
           </div>
-          {(selected.items || []).length > 0 && (
+          {selected.items?.length > 0 && (
             <div className="mb-4">
               <p className="text-xs font-semibold text-gray-500 mb-2">KALEMLER</p>
               <div className="space-y-1">
@@ -414,7 +414,7 @@ export default function Debts() {
               <div><p className="text-xs text-gray-400">Kalan</p><p className="font-bold text-red-600">₺{detailDebt.remaining?.toFixed(2)}</p></div>
               <div><p className="text-xs text-gray-400">Vade</p><p className={detailDebt.status === 'overdue' ? 'text-red-600 font-medium' : ''}>{new Date(detailDebt.due_date).toLocaleDateString('tr-TR')}</p></div>
             </div>
-            {(detailDebt.items || []).length > 0 && (
+            {detailDebt.items?.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-gray-500 mb-2 uppercase">Kalemler</p>
                 <div className="border rounded-lg overflow-hidden">

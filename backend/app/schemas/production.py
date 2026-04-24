@@ -7,6 +7,7 @@ class ProductionCreate(BaseModel):
     product_id: int
     quantity: float
     order_id: Optional[int] = None
+    customer_id: Optional[int] = None   # özel reçete seçimi için
     notes: Optional[str] = None
 
 class ProductionOut(BaseModel):
