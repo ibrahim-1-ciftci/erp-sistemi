@@ -103,7 +103,8 @@ export default function Debts() {
   const exportExcel = async () => {
     try {
       const token = localStorage.getItem('token')
-      const statusParam = tab === 'archive' ? 'paid' : (filter || '')
+      // Aktif sekmede: ödenmemiş olanları (paid hariç), arşivde: sadece paid
+      const statusParam = tab === 'archive' ? 'paid' : (filter || 'active')
       const p = statusParam ? `?status=${statusParam}` : ''
       const res = await fetch(`/api/debts/export${p}`, { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) throw new Error()

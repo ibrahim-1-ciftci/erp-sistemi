@@ -124,7 +124,9 @@ def delete_debt(debt_id: int, db: Session = Depends(get_db), current_user: User 
 def export_debts(status: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     debts = db.query(Debt).order_by(Debt.due_date).all()
     result = [build(d) for d in debts]
-    if status:
+    if status == 'active':
+        result = [r for r in result if r["status"] != 'paid']
+    elif status:
         result = [r for r in result if r["status"] == status]
 
     STATUS_TR = {"pending": "Ödenmedi", "partial": "Kısmi", "paid": "Ödendi", "overdue": "Gecikmiş"}
