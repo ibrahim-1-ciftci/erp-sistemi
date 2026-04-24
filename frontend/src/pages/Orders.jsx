@@ -151,7 +151,7 @@ export default function Orders() {
       } else if (!skipModal) {
         // Müşteriye vade tanımlı değil — manuel vade seçeneği sun
         const order = items.find(o => o.id === id)
-        setShipModal({ orderId: id, totalValue: order?.total_value || 0, customerName: order?.customer_name || '' })
+        setShipModal({ orderId: id, totalValue: order?.total_value || 0, customerName: order?.customer_name || '', orderItems: order?.items || [] })
         setShipVadeForm({ due_days: 30, create_vade: false })
         load()
       } else {
@@ -168,10 +168,10 @@ export default function Orders() {
       dueDate.setDate(dueDate.getDate() + Number(shipVadeForm.due_days))
       try {
         // Sipariş kalemlerini vade kaydına ekle
-        const orderItems = order?.items?.map(i => ({
+        const orderItems = shipModal.orderItems?.map(i => ({
           product_name: i.product_name,
           quantity: i.quantity,
-          unit: shipModal.defaultUnit || 'adet',
+          unit: 'adet',
           unit_price: i.unit_price || 0
         })) || []
 
