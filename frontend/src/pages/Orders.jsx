@@ -163,18 +163,25 @@ export default function Orders() {
 
   const handleShipWithVade = async () => {
     if (shipVadeForm.create_vade) {
-      // Manuel vade kaydı oluştur
-      const order = items.find(o => o.id === shipModal.orderId) ||
-                    { total_value: shipModal.totalValue, customer_name: shipModal.customerName, items: [] }
+      const order = items.find(o => o.id === shipModal.orderId)
       const dueDate = new Date()
       dueDate.setDate(dueDate.getDate() + Number(shipVadeForm.due_days))
       try {
+        // Sipariş kalemlerini vade kaydına ekle
+        const orderItems = order?.items?.map(i => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          unit: shipModal.defaultUnit || 'adet',
+          unit_price: i.unit_price || 0
+        })) || []
+
         await api.post('/payments', {
           order_id: shipModal.orderId,
           customer_name_override: shipModal.customerName,
           order_date: new Date().toISOString().split('T')[0],
           total_amount: shipModal.totalValue,
           due_date: dueDate.toISOString().split('T')[0],
+          items: orderItems,
           notes: `Manuel vade — ${shipVadeForm.due_days} gün`,
         })
         toast.success(`Sevkiyata alındı — ${shipVadeForm.due_days} günlük vade kaydı oluşturuldu`)
