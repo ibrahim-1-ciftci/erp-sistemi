@@ -5,9 +5,13 @@ Veritabanına başlangıç verilerini yükler.
 import sys
 sys.path.append(".")
 
-from app.core.database import SessionLocal
+from app.core.database import SessionLocal, Base, engine
 from app.core.security import hash_password
+from app.models import admin, category, product, contact, setting
 from app.models.admin import Admin
+
+# Tabloları oluştur
+Base.metadata.create_all(bind=engine)
 from app.models.category import Category
 from app.models.product import Product
 from app.models.setting import SiteSetting
