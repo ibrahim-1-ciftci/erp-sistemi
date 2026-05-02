@@ -9,6 +9,8 @@ const FIELDS = [
   { key: 'email', label: 'E-posta' },
   { key: 'address', label: 'Adres' },
   { key: 'whatsapp', label: 'WhatsApp Numarası (+90...)' },
+  { key: 'whatsapp_message_tr', label: 'WhatsApp Karşılama Mesajı (TR)' },
+  { key: 'whatsapp_message_en', label: 'WhatsApp Karşılama Mesajı (EN)' },
   { key: 'about_tr', label: 'Hakkımızda (TR)', multiline: true },
   { key: 'about_en', label: 'Hakkımızda (EN)', multiline: true },
 ]

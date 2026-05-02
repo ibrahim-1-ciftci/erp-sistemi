@@ -30,6 +30,11 @@ export default function Contact() {
   }
 
   const whatsappNum = settings.whatsapp?.replace(/\D/g, '')
+  const defaultMsg = lang === 'tr'
+    ? 'Merhaba, ürünleriniz hakkında bilgi almak istiyorum.'
+    : 'Hello, I would like to get information about your products.'
+  const whatsappMsg = (lang === 'tr' ? settings.whatsapp_message_tr : settings.whatsapp_message_en) || defaultMsg
+  const whatsappUrl = whatsappNum ? `https://wa.me/${whatsappNum}?text=${encodeURIComponent(whatsappMsg)}` : null
 
   return (
     <div className="pt-16 min-h-screen bg-gray-50">
@@ -76,8 +81,8 @@ export default function Contact() {
                 </div>
               </div>
             )}
-            {whatsappNum && (
-              <a href={`https://wa.me/${whatsappNum}`} target="_blank" rel="noopener noreferrer"
+            {whatsappUrl && (
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
                 className="bg-green-500 hover:bg-green-600 text-white rounded-2xl p-5 flex items-center gap-4 transition-colors">
                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                   <MessageCircle size={18} />
