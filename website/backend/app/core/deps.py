@@ -14,10 +14,11 @@ def get_current_admin(
 ) -> Admin:
     try:
         payload = decode_token(credentials.credentials)
-        admin_id: int = payload.get("sub")
+        admin_id = payload.get("sub")
         if admin_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    except JWTError:
+        admin_id = int(admin_id)
+    except (JWTError, ValueError, TypeError):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     admin = db.query(Admin).filter(Admin.id == admin_id).first()

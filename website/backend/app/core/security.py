@@ -13,6 +13,9 @@ def hash_password(password: str) -> str:
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
+    # sub her zaman string olsun
+    if "sub" in to_encode:
+        to_encode["sub"] = str(to_encode["sub"])
     expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
