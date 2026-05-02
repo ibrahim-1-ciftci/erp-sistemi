@@ -25,9 +25,15 @@ export default function AdminSettings() {
     e.preventDefault()
     setLoading(true)
     try {
-      await api.put('/settings', settings)
+      // null/undefined değerleri boş string'e çevir
+      const clean = Object.fromEntries(
+        Object.entries(settings).map(([k, v]) => [k, v ?? ''])
+      )
+      await api.put('/settings', clean, { headers: { 'Content-Type': 'application/json' } })
       toast.success('Ayarlar kaydedildi')
-    } catch { toast.error('Hata oluştu') }
+    } catch (err) {
+      toast.error('Hata oluştu: ' + (err.response?.status || err.message))
+    }
     finally { setLoading(false) }
   }
 
