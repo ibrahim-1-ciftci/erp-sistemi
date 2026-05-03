@@ -24,24 +24,24 @@ export default function ProductDetail() {
       <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
     </div>
   )
-
   if (!product) return null
 
   const name = lang === 'tr' ? product.name_tr : product.name_en
-  const desc = lang === 'tr' ? product.description_tr : product.description_en
+  const summary = lang === 'tr' ? product.description_tr : product.description_en
+  const details = lang === 'tr' ? product.details_tr : product.details_en
   const catName = product.category ? (lang === 'tr' ? product.category.name_tr : product.category.name_en) : ''
   const images = product.images?.length > 0 ? product.images : (product.image ? [product.image] : [])
 
   const whatsappNum = settings.whatsapp?.replace(/\D/g, '')
-  const defaultMsg = lang === 'tr'
+  const waMsg = lang === 'tr'
     ? `Merhaba, "${name}" ürünü hakkında bilgi almak istiyorum.`
     : `Hello, I would like to get information about the "${name}" product.`
-  const whatsappMsg = (lang === 'tr' ? settings.whatsapp_message_tr : settings.whatsapp_message_en) || defaultMsg
-  const whatsappUrl = whatsappNum ? `https://wa.me/${whatsappNum}?text=${encodeURIComponent(whatsappMsg)}` : null
+  const whatsappUrl = whatsappNum ? `https://wa.me/${whatsappNum}?text=${encodeURIComponent(waMsg)}` : null
 
   return (
     <div className="pt-16 min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-8">
           <Link to="/" className="hover:text-blue-600 transition-colors">{t('nav.home')}</Link>
@@ -51,22 +51,20 @@ export default function ProductDetail() {
           <span className="text-gray-700 font-medium">{name}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Görsel galerisi */}
+        {/* Üst bölüm: Görsel + Özet yan yana */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+
+          {/* Sol: Görsel galerisi */}
           <div className="space-y-4">
-            {/* Ana görsel */}
             <div className="aspect-square bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden relative group">
               {images.length > 0 ? (
-                <img src={images[activeImg]} alt={name}
-                  className="w-full h-full object-cover" />
+                <img src={images[activeImg]} alt={name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-3">
                   <Package size={64} />
                   <span className="text-sm">{t('products.noImage')}</span>
                 </div>
               )}
-
-              {/* Önceki/Sonraki */}
               {images.length > 1 && (
                 <>
                   <button onClick={() => setActiveImg(i => (i - 1 + images.length) % images.length)}
@@ -77,18 +75,15 @@ export default function ProductDetail() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 hover:bg-white rounded-full shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <ChevronRight size={18} />
                   </button>
-                  {/* Dots */}
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                     {images.map((_, i) => (
                       <button key={i} onClick={() => setActiveImg(i)}
-                        className={`w-2 h-2 rounded-full transition-all ${i === activeImg ? 'bg-blue-600 w-4' : 'bg-gray-300'}`} />
+                        className={`h-2 rounded-full transition-all ${i === activeImg ? 'bg-blue-600 w-4' : 'bg-gray-300 w-2'}`} />
                     ))}
                   </div>
                 </>
               )}
             </div>
-
-            {/* Thumbnail'lar */}
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-1">
                 {images.map((img, i) => (
@@ -101,25 +96,20 @@ export default function ProductDetail() {
             )}
           </div>
 
-          {/* Ürün bilgileri */}
+          {/* Sağ: Kısa özet + butonlar */}
           <div className="flex flex-col">
             {catName && (
               <span className="inline-flex self-start text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full mb-4">
                 {catName}
               </span>
             )}
-
             <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">{name}</h1>
 
-            {desc ? (
-              <p className="text-gray-600 leading-relaxed text-base mb-8">{desc}</p>
-            ) : (
-              <p className="text-gray-400 italic mb-8">
-                {lang === 'tr' ? 'Ürün açıklaması henüz eklenmemiş.' : 'Product description not added yet.'}
-              </p>
+            {summary && (
+              <p className="text-gray-600 leading-relaxed text-base mb-6">{summary}</p>
             )}
 
-            <div className="mt-auto space-y-3">
+            <div className="mt-auto space-y-3 pt-4">
               {whatsappUrl && (
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-2xl transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/25 w-full">
@@ -139,6 +129,17 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Alt bölüm: Detaylı açıklama */}
+        {details && (
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {lang === 'tr' ? 'Ürün Detayları' : 'Product Details'}
+            </h2>
+            <div className="text-gray-600 leading-relaxed whitespace-pre-line">{details}</div>
+          </div>
+        )}
+
       </div>
     </div>
   )

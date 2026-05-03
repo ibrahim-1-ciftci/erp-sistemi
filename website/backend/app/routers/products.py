@@ -13,7 +13,6 @@ router = APIRouter(prefix="/api/products", tags=["products"])
 
 def product_to_dict(p: Product) -> dict:
     all_images = [img.image for img in p.images] if p.images else []
-    # Ana görsel: images listesinin ilki, yoksa eski image alanı
     main_image = all_images[0] if all_images else p.image
     return {
         "id": p.id,
@@ -21,6 +20,8 @@ def product_to_dict(p: Product) -> dict:
         "name_en": p.name_en,
         "description_tr": p.description_tr,
         "description_en": p.description_en,
+        "details_tr": p.details_tr or "",
+        "details_en": p.details_en or "",
         "image": main_image,
         "images": all_images,
         "category_id": p.category_id,
@@ -60,6 +61,8 @@ def create_product(
     name_en: str = Form(...),
     description_tr: str = Form(""),
     description_en: str = Form(""),
+    details_tr: str = Form(""),
+    details_en: str = Form(""),
     category_id: Optional[int] = Form(None),
     is_active: bool = Form(True),
     order: int = Form(0),
@@ -70,6 +73,7 @@ def create_product(
     p = Product(
         name_tr=name_tr, name_en=name_en,
         description_tr=description_tr, description_en=description_en,
+        details_tr=details_tr, details_en=details_en,
         category_id=category_id, is_active=is_active, order=order
     )
     db.add(p)
@@ -93,6 +97,8 @@ def update_product(
     name_en: str = Form(...),
     description_tr: str = Form(""),
     description_en: str = Form(""),
+    details_tr: str = Form(""),
+    details_en: str = Form(""),
     category_id: Optional[int] = Form(None),
     is_active: bool = Form(True),
     order: int = Form(0),
@@ -108,6 +114,8 @@ def update_product(
     p.name_en = name_en
     p.description_tr = description_tr
     p.description_en = description_en
+    p.details_tr = details_tr
+    p.details_en = details_en
     p.category_id = category_id
     p.is_active = is_active
     p.order = order
