@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from .core.database import Base, engine
-from .models import admin, category, product, contact, setting
+from .models import admin, category, product, product_image, contact, setting
 from .routers import auth, categories, products, contact as contact_router, settings as settings_router
 
 Base.metadata.create_all(bind=engine)
