@@ -15,6 +15,9 @@ import AdminProductForm from './pages/admin/AdminProductForm'
 import AdminCategories from './pages/admin/AdminCategories'
 import AdminMessages from './pages/admin/AdminMessages'
 import AdminSettings from './pages/admin/AdminSettings'
+import ChatBot from './components/ChatBot'
+
+import ChatBot from './components/ChatBot'
 
 function PublicLayout({ children }) {
   return (
@@ -23,6 +26,7 @@ function PublicLayout({ children }) {
       <main className="flex-1">{children}</main>
       <Footer />
       <WhatsAppButton />
+      <ChatBot />
     </div>
   )
 }

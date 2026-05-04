@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
@@ -7,15 +8,21 @@ import ProductCard from '../components/ProductCard'
 export default function Products() {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
+  const [searchParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [activeCategory, setActiveCategory] = useState(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('q') || '')
 
   useEffect(() => {
     api.get('/products?active_only=true').then(r => setProducts(r.data)).catch(() => {})
     api.get('/categories').then(r => setCategories(r.data)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) setSearch(q)
+  }, [searchParams])
 
   const filtered = products.filter(p => {
     const name = lang === 'tr' ? p.name_tr : p.name_en
