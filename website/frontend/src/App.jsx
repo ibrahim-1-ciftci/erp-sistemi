@@ -17,8 +17,6 @@ import AdminMessages from './pages/admin/AdminMessages'
 import AdminSettings from './pages/admin/AdminSettings'
 import ChatBot from './components/ChatBot'
 
-import ChatBot from './components/ChatBot'
-
 function PublicLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
