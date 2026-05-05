@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react'
 import api from '../api/axios'
 
-// Kimya temalı dekoratif arka plan
 function ChemBg() {
   const symbols = ['H₂O', 'CO₂', 'NaOH', 'HCl', 'CH₄', 'O₂', 'H₂', 'NH₃', 'C₆H₆', 'SO₄', 'NO₃', 'Ca²⁺', 'Fe³⁺', 'pH', 'mol']
   const positions = [
@@ -28,38 +27,14 @@ function ChemBg() {
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
       {positions.map((pos, i) => (
         <span key={i} style={{
-          position: 'absolute',
-          top: pos.top,
-          left: pos.left,
-          fontSize: pos.size,
-          opacity: pos.opacity,
+          position: 'absolute', top: pos.top, left: pos.left,
+          fontSize: pos.size, opacity: pos.opacity,
           transform: `rotate(${pos.rotate}deg)`,
-          color: '#1e40af',
-          fontWeight: 700,
-          fontFamily: 'monospace',
-          whiteSpace: 'nowrap',
+          color: '#1e40af', fontWeight: 700, fontFamily: 'monospace', whiteSpace: 'nowrap',
         }}>
           {symbols[i % symbols.length]}
         </span>
       ))}
-      {/* Molekül bağ çizgileri */}
-      <svg className="absolute inset-0 w-full h-full" style={{ opacity: 0.04 }}>
-        <circle cx="10%" cy="30%" r="40" fill="none" stroke="#1e40af" strokeWidth="1.5" />
-        <circle cx="10%" cy="30%" r="8" fill="#1e40af" />
-        <circle cx="15%" cy="22%" r="5" fill="#1e40af" />
-        <line x1="10%" y1="30%" x2="15%" y2="22%" stroke="#1e40af" strokeWidth="1.5" />
-        <circle cx="5%" cy="22%" r="5" fill="#1e40af" />
-        <line x1="10%" y1="30%" x2="5%" y2="22%" stroke="#1e40af" strokeWidth="1.5" />
-
-        <circle cx="88%" cy="65%" r="35" fill="none" stroke="#1e40af" strokeWidth="1.5" />
-        <circle cx="88%" cy="65%" r="7" fill="#1e40af" />
-        <circle cx="93%" cy="58%" r="5" fill="#1e40af" />
-        <line x1="88%" y1="65%" x2="93%" y2="58%" stroke="#1e40af" strokeWidth="1.5" />
-        <circle cx="83%" cy="58%" r="5" fill="#1e40af" />
-        <line x1="88%" y1="65%" x2="83%" y2="58%" stroke="#1e40af" strokeWidth="1.5" />
-        <circle cx="88%" cy="73%" r="5" fill="#1e40af" />
-        <line x1="88%" y1="65%" x2="88%" y2="73%" stroke="#1e40af" strokeWidth="1.5" />
-      </svg>
     </div>
   )
 }
@@ -71,7 +46,9 @@ export default function Carousel() {
   const [products, setProducts] = useState([])
   const [offset, setOffset] = useState(0)
   const [cols, setCols] = useState(4)
+  const [cardWidth, setCardWidth] = useState(0)
   const timerRef = useRef(null)
+  const trackRef = useRef(null)
   const dragStart = useRef(null)
   const isDragging = useRef(false)
 
@@ -86,11 +63,19 @@ export default function Carousel() {
       if (window.innerWidth < 1024) return 3
       return 4
     }
-    setCols(getCols())
-    const handler = () => setCols(getCols())
-    window.addEventListener('resize', handler)
-    return () => window.removeEventListener('resize', handler)
-  }, [])
+    const update = () => {
+      const c = getCols()
+      setCols(c)
+      if (trackRef.current) {
+        const gap = 16
+        const total = trackRef.current.offsetWidth
+        setCardWidth((total - gap * (c - 1)) / c)
+      }
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [products])
 
   useEffect(() => {
     if (products.length <= cols) return
@@ -99,29 +84,29 @@ export default function Carousel() {
         const max = Math.max(0, products.length - cols)
         return o >= max ? 0 : o + 1
       })
-    }, 3000)
+    }, 3500)
     return () => clearInterval(timerRef.current)
   }, [products, cols])
 
   if (products.length === 0) return null
 
   const maxOffset = Math.max(0, products.length - cols)
-  const visible = products.slice(offset, offset + cols)
+  const gap = 16
+  const translateX = offset * (cardWidth + gap)
 
   const prev = () => { clearInterval(timerRef.current); setOffset(o => Math.max(0, o - 1)) }
   const next = () => { clearInterval(timerRef.current); setOffset(o => Math.min(maxOffset, o + 1)) }
 
-  // Touch / Mouse drag handlers
   const onDragStart = (clientX) => {
     dragStart.current = clientX
     isDragging.current = false
+    clearInterval(timerRef.current)
   }
   const onDragEnd = (clientX) => {
     if (dragStart.current === null) return
     const diff = dragStart.current - clientX
     if (Math.abs(diff) > 40) {
       isDragging.current = true
-      clearInterval(timerRef.current)
       if (diff > 0) setOffset(o => Math.min(maxOffset, o + 1))
       else setOffset(o => Math.max(0, o - 1))
     }
@@ -155,38 +140,49 @@ export default function Carousel() {
           </div>
         </div>
 
-        {/* Kartlar */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 cursor-grab active:cursor-grabbing select-none"
-          onMouseDown={e => onDragStart(e.clientX)}
-          onMouseUp={e => onDragEnd(e.clientX)}
-          onMouseLeave={() => { dragStart.current = null }}
-          onTouchStart={e => onDragStart(e.touches[0].clientX)}
-          onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}
-        >
-          {visible.map(p => {
-            const name = lang === 'tr' ? p.name_tr : p.name_en
-            const cat = p.category ? (lang === 'tr' ? p.category.name_tr : p.category.name_en) : ''
-            return (
-              <div key={p.id}
-                onClick={() => { if (!isDragging.current) navigate(`/urun/${p.id}`) }}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group border border-blue-50">
-                <div className="aspect-square bg-gradient-to-br from-blue-50 to-gray-50 overflow-hidden">
-                  {p.image ? (
-                    <img src={p.image} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package size={40} className="text-blue-200" />
-                    </div>
-                  )}
+        {/* Slider track */}
+        <div className="overflow-hidden" ref={trackRef}>
+          <div
+            className="flex"
+            style={{
+              gap: `${gap}px`,
+              transform: `translateX(-${translateX}px)`,
+              transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              cursor: 'grab',
+            }}
+            onMouseDown={e => onDragStart(e.clientX)}
+            onMouseUp={e => onDragEnd(e.clientX)}
+            onMouseLeave={() => { dragStart.current = null }}
+            onTouchStart={e => onDragStart(e.touches[0].clientX)}
+            onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}
+          >
+            {products.map(p => {
+              const name = lang === 'tr' ? p.name_tr : p.name_en
+              const cat = p.category ? (lang === 'tr' ? p.category.name_tr : p.category.name_en) : ''
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => { if (!isDragging.current) navigate(`/urun/${p.id}`) }}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group border border-blue-50 flex-shrink-0"
+                  style={{ width: cardWidth > 0 ? `${cardWidth}px` : `calc((100% - ${gap * (cols - 1)}px) / ${cols})` }}
+                >
+                  <div className="aspect-square bg-gradient-to-br from-blue-50 to-gray-50 overflow-hidden">
+                    {p.image ? (
+                      <img src={p.image} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" draggable={false} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package size={40} className="text-blue-200" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    {cat && <p className="text-xs text-blue-500 font-medium mb-0.5">{cat}</p>}
+                    <p className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{name}</p>
+                  </div>
                 </div>
-                <div className="p-3">
-                  {cat && <p className="text-xs text-blue-500 font-medium mb-0.5">{cat}</p>}
-                  <p className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{name}</p>
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
 
         {/* Dots */}
