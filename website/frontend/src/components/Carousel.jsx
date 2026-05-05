@@ -72,6 +72,8 @@ export default function Carousel() {
   const [offset, setOffset] = useState(0)
   const [cols, setCols] = useState(4)
   const timerRef = useRef(null)
+  const dragStart = useRef(null)
+  const isDragging = useRef(false)
 
   useEffect(() => {
     api.get('/products?active_only=true').then(r => setProducts(r.data)).catch(() => {})
@@ -109,6 +111,23 @@ export default function Carousel() {
   const prev = () => { clearInterval(timerRef.current); setOffset(o => Math.max(0, o - 1)) }
   const next = () => { clearInterval(timerRef.current); setOffset(o => Math.min(maxOffset, o + 1)) }
 
+  // Touch / Mouse drag handlers
+  const onDragStart = (clientX) => {
+    dragStart.current = clientX
+    isDragging.current = false
+  }
+  const onDragEnd = (clientX) => {
+    if (dragStart.current === null) return
+    const diff = dragStart.current - clientX
+    if (Math.abs(diff) > 40) {
+      isDragging.current = true
+      clearInterval(timerRef.current)
+      if (diff > 0) setOffset(o => Math.min(maxOffset, o + 1))
+      else setOffset(o => Math.max(0, o - 1))
+    }
+    dragStart.current = null
+  }
+
   return (
     <section className="relative py-12 overflow-hidden" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #eff6ff 100%)' }}>
       <ChemBg />
@@ -137,12 +156,20 @@ export default function Carousel() {
         </div>
 
         {/* Kartlar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 cursor-grab active:cursor-grabbing select-none"
+          onMouseDown={e => onDragStart(e.clientX)}
+          onMouseUp={e => onDragEnd(e.clientX)}
+          onMouseLeave={() => { dragStart.current = null }}
+          onTouchStart={e => onDragStart(e.touches[0].clientX)}
+          onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}
+        >
           {visible.map(p => {
             const name = lang === 'tr' ? p.name_tr : p.name_en
             const cat = p.category ? (lang === 'tr' ? p.category.name_tr : p.category.name_en) : ''
             return (
-              <div key={p.id} onClick={() => navigate(`/urun/${p.id}`)}
+              <div key={p.id}
+                onClick={() => { if (!isDragging.current) navigate(`/urun/${p.id}`) }}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group border border-blue-50">
                 <div className="aspect-square bg-gradient-to-br from-blue-50 to-gray-50 overflow-hidden">
                   {p.image ? (
