@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from .core.database import Base, engine
-from .models import admin, category, product, product_image, contact, setting
-from .routers import auth, categories, products, contact as contact_router, settings as settings_router
+from .models import admin, category, product, product_image, contact, setting, blog
+from .routers import auth, categories, products, contact as contact_router, settings as settings_router, blog as blog_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -26,6 +26,7 @@ app.include_router(categories.router)
 app.include_router(products.router)
 app.include_router(contact_router.router)
 app.include_router(settings_router.router)
+app.include_router(blog_router.router)
 
 @app.get("/")
 def root():

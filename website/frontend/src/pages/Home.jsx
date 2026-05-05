@@ -5,6 +5,7 @@ import { ArrowRight, Shield, Award, Truck, ChevronDown } from 'lucide-react'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
 import SearchBar from '../components/SearchBar'
+import BlogSlider from '../components/BlogSlider'
 
 export default function Home() {
   const { t, i18n } = useTranslation()
@@ -141,6 +142,9 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Blog Slider */}
+      <BlogSlider />
 
       {/* CTA */}
       <section className="py-20 bg-gray-950 relative overflow-hidden">
