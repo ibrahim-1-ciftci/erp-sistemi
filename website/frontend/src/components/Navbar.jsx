@@ -21,7 +21,6 @@ export default function Navbar() {
   const links = [
     { to: '/', label: t('nav.home') },
     { to: '/urunler', label: t('nav.products') },
-    { to: '/blog', label: 'Blog' },
     { to: '/hakkimizda', label: t('nav.about') },
     { to: '/iletisim', label: t('nav.contact') },
   ]
