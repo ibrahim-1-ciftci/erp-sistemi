@@ -36,7 +36,7 @@ export default function AdminProductForm() {
           category_id: p.category_id || '', is_active: p.is_active, order: p.order
         })
         // image_ids backend'den gelmiyor, index kullanacağız
-        setExistingImages((p.images || []).map((img, i) => ({ idx: i, image: img })))
+        setExistingImages((p.images || []).map((img, i) => ({ id: (p.image_ids || [])[i], image: img })))
       }).catch(() => navigate('/admin/products'))
     }
   }, [id])
@@ -157,13 +157,35 @@ export default function AdminProductForm() {
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Mevcut Görseller</p>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                     {existingImages.map((img, i) => (
-                      <div key={i} className="relative group aspect-square">
-                        <img src={img.image} alt="" className="w-full h-full object-cover rounded-xl border border-gray-200" />
+                      <div key={img.idx} className="relative group aspect-square">
+                        <img src={img.image} alt="" className="w-full h-full object-cover rounded-xl border-2 border-gray-200" />
                         {i === 0 && (
                           <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
                             <Star size={10} /> Ana
                           </div>
                         )}
+                        <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                          {i !== 0 && (
+                            <button type="button"
+                              onClick={async () => {
+                                await api.put(`/products/${id}/images/${img.id}/primary`)
+                                const r = await api.get(`/products/${id}`)
+                                setExistingImages((r.data.images || []).map((im, idx) => ({ id: r.data.image_ids[idx], image: im })))
+                              }}
+                              className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs flex items-center justify-center" title="Ana yap">
+                              <Star size={10} />
+                            </button>
+                          )}
+                          <button type="button"
+                            onClick={async () => {
+                              if (!confirm('Bu görseli silmek istiyor musunuz?')) return
+                              await api.delete(`/products/${id}/images/${img.id}`)
+                              setExistingImages(prev => prev.filter(im => im.id !== img.id))
+                            }}
+                            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs flex items-center justify-center">
+                            <X size={10} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

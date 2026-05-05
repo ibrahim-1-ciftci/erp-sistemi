@@ -21,7 +21,6 @@ export default function ChatBot() {
 
   useEffect(() => {
     api.get('/products?active_only=true').then(r => setProducts(r.data)).catch(() => {})
-    // Bounce animasyonu 3 saniyede bir
     const interval = setInterval(() => setBounce(b => !b), 3000)
     return () => clearInterval(interval)
   }, [])

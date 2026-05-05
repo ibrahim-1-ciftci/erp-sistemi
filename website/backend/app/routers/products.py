@@ -12,7 +12,9 @@ from ..models.category import Category
 router = APIRouter(prefix="/api/products", tags=["products"])
 
 def product_to_dict(p: Product) -> dict:
-    all_images = [img.image for img in p.images] if p.images else []
+    imgs = p.images if p.images else []
+    all_images = [img.image for img in imgs]
+    image_ids = [img.id for img in imgs]
     main_image = all_images[0] if all_images else p.image
     return {
         "id": p.id,
@@ -24,6 +26,7 @@ def product_to_dict(p: Product) -> dict:
         "details_en": p.details_en or "",
         "image": main_image,
         "images": all_images,
+        "image_ids": image_ids,
         "category_id": p.category_id,
         "is_active": p.is_active,
         "order": p.order,
@@ -139,10 +142,23 @@ def delete_product_image(id: int, image_id: int, db: Session = Depends(get_db), 
     if not img:
         raise HTTPException(404, "Not found")
     db.delete(img)
-    # Ana görseli güncelle
     p = db.query(Product).filter(Product.id == id).first()
     remaining = db.query(ProductImage).filter(ProductImage.product_id == id).order_by(ProductImage.order).all()
     p.image = remaining[0].image if remaining else ""
+    db.commit()
+    return {"ok": True}
+
+@router.put("/{id}/images/{image_id}/primary")
+def set_primary_image(id: int, image_id: int, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    img = db.query(ProductImage).filter(ProductImage.id == image_id, ProductImage.product_id == id).first()
+    if not img:
+        raise HTTPException(404, "Not found")
+    # Sıralamayı güncelle - bu görseli 0 yap, diğerlerini kaydır
+    all_imgs = db.query(ProductImage).filter(ProductImage.product_id == id).order_by(ProductImage.order).all()
+    for i, im in enumerate(all_imgs):
+        im.order = 0 if im.id == image_id else (i + 1)
+    p = db.query(Product).filter(Product.id == id).first()
+    p.image = img.image
     db.commit()
     return {"ok": True}
 
