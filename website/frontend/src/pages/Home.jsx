@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, Shield, Award, Truck, ChevronDown } from 'lucide-react'
+import { ArrowRight, Shield, Award, Truck, ChevronDown, Sparkles } from 'lucide-react'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
 import SearchBar from '../components/SearchBar'
@@ -26,93 +26,125 @@ export default function Home() {
 
   return (
     <div className="pt-16">
-      {/* Hero */}
-      <section className="relative min-h-[90vh] flex items-center bg-gray-950 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-3xl" />
-        </div>
-        <div className="absolute inset-0 opacity-5"
-          style={{backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '50px 50px'}} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+      {/* ── HERO ── */}
+      <section className="relative min-h-screen flex items-center bg-gray-950 overflow-hidden">
+        {/* Animated blobs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-blue-700/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-900/20 rounded-full blur-[100px]" />
+        </div>
+
+        {/* Grid overlay */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: 'linear-gradient(white 1px,transparent 1px),linear-gradient(90deg,white 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
+
+        {/* Floating chemical symbols */}
+        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+          {['H₂O', 'CO₂', 'NaOH', 'CH₄', 'O₂', 'pH'].map((s, i) => (
+            <span key={i} className="absolute text-blue-400/10 font-mono font-bold text-2xl"
+              style={{ top: `${15 + i * 13}%`, left: `${5 + i * 15}%`, transform: `rotate(${-20 + i * 8}deg)` }}>
+              {s}
+            </span>
+          ))}
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold px-4 py-2 rounded-full mb-6 uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold px-4 py-2 rounded-full mb-8 uppercase tracking-widest">
+              <Sparkles size={12} />
               {settings.company_name || 'Laves Kimya'}
             </div>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-6">
+
+            {/* Heading */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6">
               {lang === 'tr' ? (
-                <>Profesyonel <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Oto Bakım</span> Ürünleri</>
+                <>
+                  Profesyonel<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
+                    Oto Bakım
+                  </span>
+                  <br />Ürünleri
+                </>
               ) : (
-                <>Professional <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Auto Care</span> Products</>
+                <>
+                  Professional<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
+                    Auto Care
+                  </span>
+                  <br />Products
+                </>
               )}
             </h1>
-            <p className="text-lg md:text-xl text-gray-400 mb-8 leading-relaxed max-w-xl">
+
+            <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-lg">
               {lang === 'tr'
                 ? 'Araçlarınız için en kaliteli bakım çözümleri. Kimya bilimi ile mükemmel sonuçlar.'
                 : 'The highest quality care solutions for your vehicles. Perfect results with chemistry science.'}
             </p>
 
-            {/* Arama çubuğu */}
-            <div className="mb-8">
+            {/* Search */}
+            <div className="mb-8 max-w-xl">
               <SearchBar large />
             </div>
 
+            {/* CTA buttons */}
             <div className="flex flex-wrap gap-4">
               <Link to="/urunler"
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-4 rounded-2xl transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
-                {t('hero.cta')} <ArrowRight size={18} />
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-2xl transition-all hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30 text-sm">
+                {t('hero.cta')} <ArrowRight size={16} />
               </Link>
               <Link to="/iletisim"
-                className="inline-flex items-center gap-2 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-semibold px-8 py-4 rounded-2xl transition-all backdrop-blur-sm">
+                className="inline-flex items-center gap-2 border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold px-8 py-4 rounded-2xl transition-all text-sm backdrop-blur-sm">
                 {t('hero.contact')}
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/30 animate-bounce">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/20 animate-bounce">
           <ChevronDown size={24} />
         </div>
       </section>
 
-      {/* Stats bar */}
-      <section className="bg-blue-600 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 gap-4 text-center text-white">
-            <div>
-              <div className="text-2xl md:text-3xl font-black">30+</div>
-              <div className="text-blue-100 text-xs md:text-sm">{lang === 'tr' ? 'Ürün Çeşidi' : 'Product Types'}</div>
-            </div>
-            <div className="border-x border-blue-500">
-              <div className="text-2xl md:text-3xl font-black">100%</div>
-              <div className="text-blue-100 text-xs md:text-sm">{lang === 'tr' ? 'Kalite Kontrol' : 'Quality Control'}</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-black">B2B</div>
-              <div className="text-blue-100 text-xs md:text-sm">{lang === 'tr' ? 'Kurumsal Satış' : 'Corporate Sales'}</div>
-            </div>
+      {/* ── STATS ── */}
+      <section className="bg-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="grid grid-cols-3 text-center text-white divide-x divide-blue-500">
+            {[
+              { val: '30+', label: lang === 'tr' ? 'Ürün Çeşidi' : 'Product Types' },
+              { val: '100%', label: lang === 'tr' ? 'Kalite Kontrol' : 'Quality Control' },
+              { val: 'B2B', label: lang === 'tr' ? 'Kurumsal Satış' : 'Corporate Sales' },
+            ].map((s, i) => (
+              <div key={i} className="py-1">
+                <div className="text-2xl md:text-3xl font-black">{s.val}</div>
+                <div className="text-blue-100 text-xs mt-0.5">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* ── CAROUSEL ── */}
+      <Carousel />
+
+      {/* ── FEATURES ── */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
+            <p className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-3">
+              {lang === 'tr' ? 'Neden Biz?' : 'Why Us?'}
+            </p>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900">
               {lang === 'tr' ? 'Neden Laves Kimya?' : 'Why Laves Chemistry?'}
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              {lang === 'tr' ? 'Sektörde fark yaratan kalite ve güvenilirlik' : 'Quality and reliability that makes a difference in the industry'}
-            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {features.map((f, i) => (
-              <div key={i} className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all group">
-                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <div key={i} className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all group">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
                   <f.icon size={24} className="text-white" />
                 </div>
                 <h3 className="font-bold text-gray-900 text-lg mb-2">{f.title}</h3>
@@ -123,50 +155,55 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* ── FEATURED PRODUCTS ── */}
       {featured.length > 0 && (
-        <section className="py-20">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mb-2">{lang === 'tr' ? 'Katalog' : 'Catalog'}</p>
+                <p className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
+                  {lang === 'tr' ? 'Katalog' : 'Catalog'}
+                </p>
                 <h2 className="text-3xl md:text-4xl font-black text-gray-900">{t('products.title')}</h2>
               </div>
-              <Link to="/urunler" className="hidden md:inline-flex items-center gap-2 text-blue-600 font-semibold hover:gap-3 transition-all">
-                {lang === 'tr' ? 'Tümünü Gör' : 'View All'} <ArrowRight size={16} />
+              <Link to="/urunler" className="hidden md:inline-flex items-center gap-1.5 text-blue-600 font-semibold text-sm hover:gap-3 transition-all">
+                {lang === 'tr' ? 'Tümünü Gör' : 'View All'} <ArrowRight size={15} />
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featured.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
+            <div className="mt-8 text-center md:hidden">
+              <Link to="/urunler" className="inline-flex items-center gap-1.5 text-blue-600 font-semibold text-sm">
+                {lang === 'tr' ? 'Tümünü Gör' : 'View All'} <ArrowRight size={15} />
+              </Link>
+            </div>
           </div>
         </section>
       )}
 
-      {/* Carousel */}
-      <Carousel />
-
-      {/* CTA */}
-      <section className="py-20 bg-gray-950 relative overflow-hidden">
-        <div className="absolute inset-0">
+      {/* ── CTA ── */}
+      <section className="relative py-24 bg-gray-950 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
         </div>
-        <div className="relative max-w-3xl mx-auto px-4 text-center">
+        <div className="relative max-w-2xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
             {lang === 'tr' ? 'Bizimle İletişime Geçin' : 'Get in Touch With Us'}
           </h2>
-          <p className="text-gray-400 mb-8 text-lg">
+          <p className="text-gray-400 mb-8">
             {lang === 'tr'
               ? 'Ürünlerimiz ve fiyatlarımız hakkında bilgi almak için bize ulaşın.'
               : 'Contact us for information about our products and pricing.'}
           </p>
           <Link to="/iletisim"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-4 rounded-2xl transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
-            {t('hero.contact')} <ArrowRight size={18} />
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-2xl transition-all hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30">
+            {t('hero.contact')} <ArrowRight size={16} />
           </Link>
         </div>
       </section>
+
     </div>
   )
 }

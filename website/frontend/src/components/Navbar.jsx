@@ -11,7 +11,7 @@ export default function Navbar() {
   const isHome = location.pathname === '/'
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 30)
+    const handler = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', handler)
     return () => window.removeEventListener('scroll', handler)
   }, [])
@@ -27,12 +27,19 @@ export default function Navbar() {
 
   const toggleLang = () => i18n.changeLanguage(i18n.language === 'tr' ? 'en' : 'tr')
 
+  // Transparent sadece ana sayfada scroll olmadığında
   const transparent = isHome && !scrolled && !open
-  const textColor = transparent ? 'text-white' : 'text-gray-700'
-  const activColor = transparent ? 'text-blue-300' : 'text-blue-600'
+  const bg = transparent ? 'bg-transparent' : 'bg-white/95 backdrop-blur-md shadow-sm'
+  const logoText = transparent ? 'text-white' : 'text-gray-900'
+  const logoAccent = transparent ? 'text-blue-400' : 'text-blue-600'
+  const linkColor = transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-blue-600'
+  const activeColor = transparent ? 'text-white font-semibold' : 'text-blue-600 font-semibold'
+  const langBtn = transparent
+    ? 'border-white/30 text-white hover:bg-white/10'
+    : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${transparent ? 'bg-transparent' : 'bg-white/95 backdrop-blur-md shadow-sm'}`}>
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${bg}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -40,8 +47,8 @@ export default function Navbar() {
             <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
               <span className="text-white font-black text-sm">L</span>
             </div>
-            <span className={`font-black text-xl transition-colors ${transparent ? 'text-white' : 'text-gray-900'}`}>
-              Laves <span className="text-blue-500">Kimya</span>
+            <span className={`font-black text-xl transition-colors ${logoText}`}>
+              Laves <span className={logoAccent}>Kimya</span>
             </span>
           </Link>
 
@@ -49,7 +56,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             {links.map(l => (
               <Link key={l.to} to={l.to}
-                className={`text-sm font-medium transition-colors ${location.pathname === l.to ? activColor : `${textColor} hover:text-blue-500`}`}>
+                className={`text-sm transition-colors ${location.pathname === l.to ? activeColor : linkColor}`}>
                 {l.label}
               </Link>
             ))}
@@ -58,10 +65,11 @@ export default function Navbar() {
           {/* Lang + mobile */}
           <div className="flex items-center gap-3">
             <button onClick={toggleLang}
-              className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors ${transparent ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}>
+              className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors ${langBtn}`}>
               {i18n.language === 'tr' ? 'EN' : 'TR'}
             </button>
-            <button className={`md:hidden p-1 ${textColor}`} onClick={() => setOpen(!open)}>
+            <button className={`md:hidden p-1 transition-colors ${transparent ? 'text-white' : 'text-gray-700'}`}
+              onClick={() => setOpen(!open)}>
               {open ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
