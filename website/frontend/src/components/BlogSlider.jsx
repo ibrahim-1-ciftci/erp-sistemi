@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
@@ -10,28 +10,34 @@ export default function BlogSlider() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState([])
   const [current, setCurrent] = useState(0)
-  const [cols, setCols] = useState(3)
   const intervalRef = useRef(null)
-
-  useEffect(() => {
-    const updateCols = () => {
-      if (window.innerWidth < 640) setCols(1)
-      else if (window.innerWidth < 1024) setCols(2)
-      else setCols(3)
-    }
-    updateCols()
-    window.addEventListener('resize', updateCols)
-    return () => window.removeEventListener('resize', updateCols)
-  }, [])
 
   useEffect(() => {
     api.get('/blog?active_only=true').then(r => setPosts(r.data)).catch(() => {})
   }, [])
 
+  const getCols = () => {
+    if (window.innerWidth < 640) return 1
+    if (window.innerWidth < 1024) return 2
+    return 3
+  }
+
+  const [cols, setCols] = useState(3)
+
+  useEffect(() => {
+    setCols(getCols())
+    const handler = () => setCols(getCols())
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   useEffect(() => {
     if (posts.length <= cols) return
     intervalRef.current = setInterval(() => {
-      setCurrent(c => (c + 1) % Math.ceil(posts.length / cols))
+      setCurrent(c => {
+        const total = Math.ceil(posts.length / cols)
+        return (c + 1) % total
+      })
     }, 4000)
     return () => clearInterval(intervalRef.current)
   }, [posts, cols])
@@ -41,23 +47,28 @@ export default function BlogSlider() {
   const totalPages = Math.ceil(posts.length / cols)
   const visible = posts.slice(current * cols, current * cols + cols)
 
-  const prev = () => { clearInterval(intervalRef.current); setCurrent(c => (c - 1 + totalPages) % totalPages) }
-  const next = () => { clearInterval(intervalRef.current); setCurrent(c => (c + 1) % totalPages) }
+  const prev = () => {
+    clearInterval(intervalRef.current)
+    setCurrent(c => (c - 1 + totalPages) % totalPages)
+  }
+  const next = () => {
+    clearInterval(intervalRef.current)
+    setCurrent(c => (c + 1) % totalPages)
+  }
 
   const formatDate = (iso) => {
     if (!iso) return ''
-    return new Date(iso).toLocaleDateString(lang === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    try {
+      return new Date(iso).toLocaleDateString(lang === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    } catch { return '' }
   }
 
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mb-1">
-              {lang === 'tr' ? 'Blog' : 'Blog'}
-            </p>
+            <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mb-1">Blog</p>
             <h2 className="text-2xl md:text-3xl font-black text-gray-900">
               {lang === 'tr' ? 'Güncel Haberler' : 'Latest News'}
             </h2>
@@ -68,7 +79,6 @@ export default function BlogSlider() {
           </button>
         </div>
 
-        {/* Slider */}
         <div className="relative">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {visible.map(post => {
@@ -99,22 +109,20 @@ export default function BlogSlider() {
             })}
           </div>
 
-          {/* Navigasyon */}
           {totalPages > 1 && (
             <>
               <button onClick={prev}
-                className="absolute -left-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-gray-200 rounded-full shadow flex items-center justify-center hover:bg-blue-50 hover:border-blue-400 transition-colors">
+                className="absolute -left-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-gray-200 rounded-full shadow flex items-center justify-center hover:bg-blue-50 transition-colors">
                 <ChevronLeft size={18} className="text-gray-600" />
               </button>
               <button onClick={next}
-                className="absolute -right-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-gray-200 rounded-full shadow flex items-center justify-center hover:bg-blue-50 hover:border-blue-400 transition-colors">
+                className="absolute -right-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-gray-200 rounded-full shadow flex items-center justify-center hover:bg-blue-50 transition-colors">
                 <ChevronRight size={18} className="text-gray-600" />
               </button>
             </>
           )}
         </div>
 
-        {/* Dots */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-6">
             {Array.from({ length: totalPages }).map((_, i) => (
