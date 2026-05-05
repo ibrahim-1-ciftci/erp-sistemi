@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import React from 'react'
+import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom'
 import { Package, Tag, MessageSquare, Settings, LogOut, FileText } from 'lucide-react'
 
 export default function AdminLayout() {
   const navigate = useNavigate()
+  const token = localStorage.getItem('laves_admin_token')
 
-  useEffect(() => {
-    if (!localStorage.getItem('laves_admin_token')) navigate('/admin/login')
-  }, [])
+  if (!token) {
+    return <Navigate to="/admin/login" replace />
+  }
 
   const logout = () => {
     localStorage.removeItem('laves_admin_token')
@@ -24,7 +25,6 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
       <aside className="w-56 bg-white border-r border-gray-100 flex flex-col">
         <div className="p-5 border-b border-gray-100">
           <div className="flex items-center gap-2">
@@ -51,8 +51,6 @@ export default function AdminLayout() {
           </button>
         </div>
       </aside>
-
-      {/* Content */}
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>
