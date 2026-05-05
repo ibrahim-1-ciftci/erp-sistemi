@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
@@ -8,7 +8,9 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <App />
-    <Toaster position="top-right" />
+    <Suspense fallback={<div className="min-h-screen bg-gray-950" />}>
+      <App />
+      <Toaster position="top-right" />
+    </Suspense>
   </BrowserRouter>
 )

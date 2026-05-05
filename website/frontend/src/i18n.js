@@ -58,7 +58,8 @@ i18n.use(initReactI18next).init({
   resources,
   lng: 'tr',
   fallbackLng: 'tr',
-  interpolation: { escapeValue: false }
+  interpolation: { escapeValue: false },
+  initImmediate: false
 })
 
 export default i18n
