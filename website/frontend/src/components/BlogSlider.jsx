@@ -10,30 +10,36 @@ export default function BlogSlider() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState([])
   const [current, setCurrent] = useState(0)
+  const [cols, setCols] = useState(3)
   const intervalRef = useRef(null)
+
+  useEffect(() => {
+    const updateCols = () => {
+      if (window.innerWidth < 640) setCols(1)
+      else if (window.innerWidth < 1024) setCols(2)
+      else setCols(3)
+    }
+    updateCols()
+    window.addEventListener('resize', updateCols)
+    return () => window.removeEventListener('resize', updateCols)
+  }, [])
 
   useEffect(() => {
     api.get('/blog?active_only=true').then(r => setPosts(r.data)).catch(() => {})
   }, [])
 
   useEffect(() => {
-    if (posts.length <= 1) return
-    intervalRef.current = setInterval(() => setCurrent(c => (c + 1) % Math.ceil(posts.length / visibleCount())), 4000)
+    if (posts.length <= cols) return
+    intervalRef.current = setInterval(() => {
+      setCurrent(c => (c + 1) % Math.ceil(posts.length / cols))
+    }, 4000)
     return () => clearInterval(intervalRef.current)
-  }, [posts])
-
-  const visibleCount = () => {
-    if (typeof window === 'undefined') return 3
-    if (window.innerWidth < 640) return 1
-    if (window.innerWidth < 1024) return 2
-    return 3
-  }
+  }, [posts, cols])
 
   if (posts.length === 0) return null
 
-  const vc = visibleCount()
-  const totalPages = Math.ceil(posts.length / vc)
-  const visible = posts.slice(current * vc, current * vc + vc)
+  const totalPages = Math.ceil(posts.length / cols)
+  const visible = posts.slice(current * cols, current * cols + cols)
 
   const prev = () => { clearInterval(intervalRef.current); setCurrent(c => (c - 1 + totalPages) % totalPages) }
   const next = () => { clearInterval(intervalRef.current); setCurrent(c => (c + 1) % totalPages) }
