@@ -10,25 +10,23 @@ export default function BlogSlider() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState([])
   const [current, setCurrent] = useState(0)
+  const [cols, setCols] = useState(3)
   const intervalRef = useRef(null)
 
   useEffect(() => {
-    api.get('/blog?active_only=true').then(r => setPosts(r.data)).catch(() => {})
-  }, [])
-
-  const getCols = () => {
-    if (window.innerWidth < 640) return 1
-    if (window.innerWidth < 1024) return 2
-    return 3
-  }
-
-  const [cols, setCols] = useState(3)
-
-  useEffect(() => {
+    const getCols = () => {
+      if (window.innerWidth < 640) return 1
+      if (window.innerWidth < 1024) return 2
+      return 3
+    }
     setCols(getCols())
     const handler = () => setCols(getCols())
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
+  }, [])
+
+  useEffect(() => {
+    api.get('/blog?active_only=true').then(r => setPosts(r.data)).catch(() => {})
   }, [])
 
   useEffect(() => {
