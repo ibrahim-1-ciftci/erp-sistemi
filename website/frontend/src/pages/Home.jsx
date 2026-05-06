@@ -6,6 +6,7 @@ import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
 import SearchBar from '../components/SearchBar'
 import Carousel from '../components/Carousel'
+import ParticleCanvas from '../components/ParticleCanvas'
 
 export default function Home() {
   const { t, i18n } = useTranslation()
@@ -40,15 +41,8 @@ export default function Home() {
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'linear-gradient(white 1px,transparent 1px),linear-gradient(90deg,white 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
 
-        {/* Floating chemical symbols */}
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-          {['H₂O', 'CO₂', 'NaOH', 'CH₄', 'O₂', 'pH'].map((s, i) => (
-            <span key={i} className="absolute text-blue-400/10 font-mono font-bold text-2xl"
-              style={{ top: `${15 + i * 13}%`, left: `${5 + i * 15}%`, transform: `rotate(${-20 + i * 8}deg)` }}>
-              {s}
-            </span>
-          ))}
-        </div>
+        {/* Particle animation */}
+        <ParticleCanvas />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
           <div className="max-w-3xl">
