@@ -157,7 +157,7 @@ export default function AdminProductForm() {
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Mevcut Görseller</p>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                     {existingImages.map((img, i) => (
-                      <div key={img.idx} className="relative group aspect-square">
+                      <div key={img.id || i} className="relative group aspect-square">
                         <img src={img.image} alt="" className="w-full h-full object-cover rounded-xl border-2 border-gray-200" />
                         {i === 0 && (
                           <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
