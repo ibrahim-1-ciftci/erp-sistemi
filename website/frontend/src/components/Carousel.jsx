@@ -56,6 +56,7 @@ export default function Carousel() {
   const offsetRef = useRef(0)
   const maxOffsetRef = useRef(0)
   const cardWidthRef = useRef(0)
+  const wasDraggingRef = useRef(false)
   const gap = 16
 
   useEffect(() => {
@@ -111,6 +112,7 @@ export default function Carousel() {
   const startDrag = (clientX) => {
     clearInterval(timerRef.current)
     dragStartX.current = clientX
+    wasDraggingRef.current = false
     setIsDragging(true)
     setDragDelta(0)
   }
@@ -118,6 +120,7 @@ export default function Carousel() {
   const moveDrag = (clientX) => {
     if (dragStartX.current === null) return
     const delta = clientX - dragStartX.current
+    if (Math.abs(delta) > 5) wasDraggingRef.current = true
     setDragDelta(delta)
   }
 
@@ -135,6 +138,8 @@ export default function Carousel() {
     dragStartX.current = null
     setDragDelta(0)
     setIsDragging(false)
+    // wasDraggingRef'i kısa süre sonra sıfırla — click handler'ın önce çalışması için
+    setTimeout(() => { wasDraggingRef.current = false }, 50)
   }
 
   const goTo = (i) => { clearInterval(timerRef.current); setOffset(i) }
@@ -191,11 +196,10 @@ export default function Carousel() {
             {products.map(p => {
               const name = lang === 'tr' ? p.name_tr : p.name_en
               const cat = p.category ? (lang === 'tr' ? p.category.name_tr : p.category.name_en) : ''
-              const wasDragging = Math.abs(dragDelta) > 5
               return (
                 <div
                   key={p.id}
-                  onClick={() => { if (!wasDragging) navigate(`/urun/${p.id}`) }}
+                  onClick={() => { if (!wasDraggingRef.current) navigate(`/urun/${p.id}`) }}
                   className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group border border-blue-50 flex-shrink-0"
                   style={{ width: cardWidth > 0 ? `${cardWidth}px` : `calc((100% - ${gap * (cols - 1)}px) / ${cols})` }}
                 >
