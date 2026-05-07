@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { X, Send, MessageCircle, Bot, Loader2 } from 'lucide-react'
 import api from '../api/axios'
 
 export default function ChatBot() {
   const { i18n } = useTranslation()
   const lang = i18n.language
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([]) // {role: 'user'|'assistant', content, id}
   const [input, setInput] = useState('')
@@ -68,19 +70,54 @@ export default function ChatBot() {
     ? ['Ürünleriniz neler?', 'Nasıl sipariş verebilirim?', 'İletişim bilgileri', 'Toplu satış yapıyor musunuz?']
     : ['What products do you have?', 'How can I order?', 'Contact information', 'Do you do bulk sales?']
 
-  // Mesaj metnini formatla (** bold **, satır sonları)
+  // Mesaj metnini formatla (** bold **, [link](url), satır sonları)
   const formatText = (text) => {
     return text.split('\n').map((line, i) => {
-      const parts = line.split(/\*\*(.*?)\*\*/g)
+      // Markdown linklerini parse et: [text](/url)
+      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
+      const parts = []
+      let lastIndex = 0
+      let match
+
+      while ((match = linkRegex.exec(line)) !== null) {
+        // Link öncesi metin
+        if (match.index > lastIndex) {
+          const before = line.substring(lastIndex, match.index)
+          parts.push(...parseBold(before))
+        }
+        // Link
+        parts.push(
+          <a
+            key={`link-${i}-${match.index}`}
+            href={match[2]}
+            onClick={(e) => { e.preventDefault(); navigate(match[2]); setOpen(false) }}
+            className="text-blue-600 hover:text-blue-700 underline font-medium cursor-pointer">
+            {match[1]}
+          </a>
+        )
+        lastIndex = match.index + match[0].length
+      }
+
+      // Kalan metin
+      if (lastIndex < line.length) {
+        parts.push(...parseBold(line.substring(lastIndex)))
+      }
+
       return (
         <span key={i}>
-          {parts.map((part, j) =>
-            j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-          )}
+          {parts.length > 0 ? parts : parseBold(line)}
           {i < text.split('\n').length - 1 && <br />}
         </span>
       )
     })
+  }
+
+  // Bold parse helper
+  const parseBold = (text) => {
+    const boldParts = text.split(/\*\*(.*?)\*\*/g)
+    return boldParts.map((part, j) =>
+      j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+    )
   }
 
   return (

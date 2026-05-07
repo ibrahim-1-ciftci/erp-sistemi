@@ -25,26 +25,24 @@ def get_products_context(db: Session) -> str:
     products = db.query(Product).filter(Product.is_active == True).order_by(Product.order).all()
     if not products:
         return "Henüz ürün bulunmamaktadır."
-    
     lines = []
     for p in products:
         cat = p.category.name_tr if p.category else "Kategorisiz"
         desc = p.description_tr or ""
         details = p.details_tr or ""
-        lines.append(f"- {p.name_tr} (Kategori: {cat}){': ' + desc if desc else ''}{' | ' + details[:100] if details else ''}")
+        lines.append(f"- ID:{p.id} | {p.name_tr} (Kategori: {cat}){': ' + desc[:80] if desc else ''}{' | ' + details[:80] if details else ''}")
     return "\n".join(lines)
 
 def get_products_context_en(db: Session) -> str:
     products = db.query(Product).filter(Product.is_active == True).order_by(Product.order).all()
     if not products:
         return "No products available."
-    
     lines = []
     for p in products:
         cat = p.category.name_en if p.category else "Uncategorized"
         desc = p.description_en or ""
         details = p.details_en or ""
-        lines.append(f"- {p.name_en} (Category: {cat}){': ' + desc if desc else ''}{' | ' + details[:100] if details else ''}")
+        lines.append(f"- ID:{p.id} | {p.name_en} (Category: {cat}){': ' + desc[:80] if desc else ''}{' | ' + details[:80] if details else ''}")
     return "\n".join(lines)
 
 def get_company_info(db: Session) -> dict:
@@ -80,18 +78,19 @@ async def chat(req: ChatRequest, db: Session = Depends(get_db)):
 - WhatsApp: {whatsapp}
 - Adres: {address}
 
-MEVCUT ÜRÜN KATALOĞU:
+MEVCUT ÜRÜN KATALOĞU (Her satırda ID ve ürün adı var):
 {products_ctx}
 
 GÖREV VE KURALLAR:
-1. Müşterilere ürünler hakkında detaylı, doğru ve faydalı bilgi ver
-2. Ürün önerisi yaparken müşterinin ihtiyacını anlamaya çalış
-3. Fiyat sorarken "Fiyat bilgisi için lütfen bizimle iletişime geçin" de
-4. İletişim bilgilerini gerektiğinde paylaş
-5. Türkçe konuş, samimi ve profesyonel ol
-6. Katalogda olmayan ürünler için "Bu ürünü şu an sunmuyoruz, ama [benzer ürün] önerebilirim" de
-7. Kısa ve öz cevaplar ver, gerektiğinde detaya gir
-8. Emoji kullanabilirsin ama abartma"""
+1. Ürün önerisi yaparken MUTLAKA şu formatta link ver: [Ürün Adı](/urun/ID)
+   Örnek: [LAVES PREMIUM Oto Şampuanı](/urun/1)
+2. Birden fazla ürün öneriyorsan her birini ayrı satırda linkle göster
+3. Müşterinin ihtiyacını anlamaya çalış, doğru ürünü öner
+4. Fiyat sorarken "Fiyat bilgisi için lütfen bizimle iletişime geçin" de
+5. İletişim bilgilerini gerektiğinde paylaş
+6. Türkçe konuş, samimi ve profesyonel ol
+7. Katalogda olmayan ürünler için "Bu ürünü şu an sunmuyoruz" de
+8. Kısa ve öz cevaplar ver"""
     else:
         system_prompt = f"""You are the smart customer assistant of {company_name}, a professional automotive care and chemistry products company.
 
@@ -102,17 +101,19 @@ COMPANY INFO:
 - WhatsApp: {whatsapp}
 - Address: {address}
 
-PRODUCT CATALOG:
+PRODUCT CATALOG (Each line has ID and product name):
 {products_ctx}
 
 RULES:
-1. Provide detailed, accurate and helpful information about products
-2. Try to understand customer needs before recommending products
-3. For pricing: "Please contact us for pricing information"
-4. Share contact info when needed
-5. Be friendly and professional
-6. For products not in catalog: "We don't currently offer that, but I can suggest [similar product]"
-7. Keep answers concise but detailed when needed"""
+1. When recommending products, ALWAYS use this link format: [Product Name](/urun/ID)
+   Example: [LAVES PREMIUM Car Shampoo](/urun/1)
+2. List each recommended product on a separate line with its link
+3. Try to understand customer needs before recommending
+4. For pricing: "Please contact us for pricing information"
+5. Share contact info when needed
+6. Be friendly and professional
+7. For products not in catalog: "We don't currently offer that"
+8. Keep answers concise"""
 
     # Groq API'ye gönder
     messages = [{"role": "system", "content": system_prompt}]
