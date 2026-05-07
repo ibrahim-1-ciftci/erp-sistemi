@@ -3,10 +3,9 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
 import httpx
-import os
 from ..core.database import get_db
+from ..core.config import settings
 from ..models.product import Product
-from ..models.category import Category
 from ..models.setting import Setting
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -55,7 +54,7 @@ def get_company_info(db: Session) -> dict:
 
 @router.post("")
 async def chat(req: ChatRequest, db: Session = Depends(get_db)):
-    api_key = os.getenv("GROQ_API_KEY", "")
+    api_key = settings.GROQ_API_KEY
     if not api_key:
         raise HTTPException(500, "GROQ_API_KEY tanımlı değil")
 
