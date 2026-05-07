@@ -27,9 +27,8 @@ export default function AdminSettings() {
     e.preventDefault()
     setLoading(true)
     try {
-      // null/undefined değerleri boş string'e çevir
       const clean = Object.fromEntries(
-        Object.entries(settings).map(([k, v]) => [k, v ?? ''])
+        Object.entries(settings || {}).map(([k, v]) => [k, v ?? ''])
       )
       await api.put('/settings', clean, { headers: { 'Content-Type': 'application/json' } })
       toast.success('Ayarlar kaydedildi')

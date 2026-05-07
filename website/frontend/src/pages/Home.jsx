@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { ArrowRight, Shield, Award, Truck, ChevronDown, Sparkles } from 'lucide-react'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
-import SearchBar from '../components/SearchBar'
 import Carousel from '../components/Carousel'
 import ParticleCanvas from '../components/ParticleCanvas'
 
@@ -78,11 +77,6 @@ export default function Home() {
                 ? 'Araçlarınız için en kaliteli bakım çözümleri. Kimya bilimi ile mükemmel sonuçlar.'
                 : 'The highest quality care solutions for your vehicles. Perfect results with chemistry science.'}
             </p>
-
-            {/* Search */}
-            <div className="mb-8 max-w-xl">
-              <SearchBar large />
-            </div>
 
             {/* CTA buttons */}
             <div className="flex flex-wrap gap-4">

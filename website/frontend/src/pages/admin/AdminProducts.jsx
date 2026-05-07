@@ -43,9 +43,11 @@ export default function AdminProducts() {
 
   const handleDelete = async id => {
     if (!confirm('Silmek istediğinize emin misiniz?')) return
-    await api.delete(`/products/${id}`)
-    toast.success('Silindi')
-    load()
+    try {
+      await api.delete(`/products/${id}`)
+      toast.success('Silindi')
+      load()
+    } catch { toast.error('Hata oluştu') }
   }
 
   return (
