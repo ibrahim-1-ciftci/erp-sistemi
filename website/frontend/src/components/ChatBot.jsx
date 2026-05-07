@@ -1,155 +1,183 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, Send, MessageCircle } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { X, Send, MessageCircle, Bot, Loader2 } from 'lucide-react'
 import api from '../api/axios'
 
 export default function ChatBot() {
   const { i18n } = useTranslation()
   const lang = i18n.language
-  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState([]) // {role: 'user'|'assistant', content, id}
   const [input, setInput] = useState('')
-  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [showBubble, setShowBubble] = useState(true)
   const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
 
-  useEffect(() => {
-    api.get('/products?active_only=true').then(r => setProducts(r.data)).catch(() => {})
-  }, [])
-
+  // Karşılama mesajı
   useEffect(() => {
     if (open && messages.length === 0) {
       const welcome = lang === 'tr'
-        ? 'Merhaba! 👋 Ben Laves Kimya asistanıyım. Ürün aramak için ürün adını yazabilirsiniz.'
-        : 'Hello! 👋 I\'m the Laves Chemistry assistant. Type a product name to search.'
-      setTimeout(() => setMessages([{ from: 'bot', text: welcome, id: 1 }]), 300)
+        ? 'Merhaba! 👋 Ben Laves Kimya\'nın AI asistanıyım. Ürünlerimiz, kullanım alanları veya sipariş hakkında her şeyi sorabilirsiniz.'
+        : 'Hello! 👋 I\'m the AI assistant of Laves Chemistry. Ask me anything about our products, usage or orders.'
+      setMessages([{ role: 'assistant', content: welcome, id: 1 }])
     }
-  }, [open, lang])
+    if (open) {
+      setShowBubble(false)
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
+  }, [open])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, loading])
 
-  const addBot = (text, prods = []) => {
-    setMessages(prev => [...prev, { from: 'bot', text, products: prods, id: Date.now() }])
-  }
-
-  const processQuery = (q) => {
-    const lower = q.toLowerCase()
-    if (['merhaba', 'selam', 'hello', 'hi'].some(w => lower.includes(w))) {
-      addBot(lang === 'tr' ? 'Merhaba! 😊 Nasıl yardımcı olabilirim?' : 'Hello! 😊 How can I help?')
-      return
-    }
-    if (['iletişim', 'telefon', 'contact'].some(w => lower.includes(w))) {
-      addBot(lang === 'tr' ? 'İletişim sayfamızdan bize ulaşabilirsiniz! 📞' : 'You can reach us via our contact page! 📞')
-      return
-    }
-    const found = products.filter(p => {
-      const name = (lang === 'tr' ? p.name_tr : p.name_en).toLowerCase()
-      return name.includes(lower) || lower.split(' ').some(w => w.length > 2 && name.includes(w))
-    }).slice(0, 4)
-
-    if (found.length > 0) {
-      addBot(lang === 'tr' ? `${found.length} ürün buldum:` : `Found ${found.length} product(s):`, found)
-    } else {
-      addBot(lang === 'tr' ? 'Ürün bulunamadı. Farklı bir arama deneyin. 🔍' : 'No products found. Try a different search. 🔍')
-    }
-  }
-
-  const handleSend = () => {
-    const q = input.trim()
-    if (!q) return
-    setMessages(prev => [...prev, { from: 'user', text: q, id: Date.now() }])
+  const sendMessage = async (text) => {
+    const q = text || input.trim()
+    if (!q || loading) return
     setInput('')
-    setTimeout(() => processQuery(q), 400)
+
+    const userMsg = { role: 'user', content: q, id: Date.now() }
+    const newMessages = [...messages, userMsg]
+    setMessages(newMessages)
+    setLoading(true)
+
+    try {
+      // Sadece role+content gönder (id backend'e gitmesin)
+      const history = newMessages.map(m => ({ role: m.role, content: m.content }))
+      const res = await api.post('/chat', { messages: history, lang })
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: res.data.reply,
+        id: Date.now() + 1
+      }])
+    } catch {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: lang === 'tr'
+          ? 'Üzgünüm, şu an yanıt veremiyorum. Lütfen daha sonra tekrar deneyin. 🙏'
+          : 'Sorry, I can\'t respond right now. Please try again later. 🙏',
+        id: Date.now() + 1
+      }])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const quickQuestions = lang === 'tr'
-    ? ['Cila ürünleri', 'Temizlik', 'Lastik bakım', 'İletişim']
-    : ['Polish products', 'Cleaning', 'Tire care', 'Contact']
+    ? ['Ürünleriniz neler?', 'Nasıl sipariş verebilirim?', 'İletişim bilgileri', 'Toplu satış yapıyor musunuz?']
+    : ['What products do you have?', 'How can I order?', 'Contact information', 'Do you do bulk sales?']
+
+  // Mesaj metnini formatla (** bold **, satır sonları)
+  const formatText = (text) => {
+    return text.split('\n').map((line, i) => {
+      const parts = line.split(/\*\*(.*?)\*\*/g)
+      return (
+        <span key={i}>
+          {parts.map((part, j) =>
+            j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+          )}
+          {i < text.split('\n').length - 1 && <br />}
+        </span>
+      )
+    })
+  }
 
   return (
     <>
-      {/* Buton */}
+      {/* Açma butonu */}
       {!open && (
-        <div className="fixed bottom-24 right-6 z-50">
-          <button onClick={() => setOpen(true)}
+        <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-2">
+          {showBubble && (
+            <div className="bg-white text-gray-700 text-xs font-medium px-3 py-2 rounded-2xl shadow-lg border border-gray-100 max-w-[160px] text-center animate-bounce">
+              {lang === 'tr' ? 'Yardım lazım mı? 💬' : 'Need help? 💬'}
+              <div className="absolute bottom-0 right-5 translate-y-1/2 w-2 h-2 bg-white border-r border-b border-gray-100 rotate-45" />
+            </div>
+          )}
+          <button
+            onClick={() => setOpen(true)}
             className="w-14 h-14 rounded-full shadow-xl flex items-center justify-center bg-gradient-to-br from-blue-700 to-blue-500 hover:scale-110 transition-transform">
             <MessageCircle size={26} className="text-white" />
           </button>
-          <div className="absolute -top-10 right-0 bg-white text-gray-700 text-xs font-medium px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap border border-gray-100">
-            {lang === 'tr' ? 'Yardım lazım mı? 💬' : 'Need help? 💬'}
-            <div className="absolute bottom-0 right-4 translate-y-1/2 w-2 h-2 bg-white border-r border-b border-gray-100 rotate-45" />
-          </div>
         </div>
       )}
 
       {/* Chat penceresi */}
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 flex flex-col bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden" style={{ height: '480px' }}>
+        <div className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 flex flex-col bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
+          style={{ height: '520px' }}>
+
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-4 py-3 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-4 py-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-white font-black text-sm">L</span>
+                <Bot size={18} className="text-white" />
               </div>
               <div>
-                <p className="text-white font-bold text-sm">Laves Asistan</p>
+                <p className="text-white font-bold text-sm">Laves AI Asistan</p>
                 <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                  <p className="text-blue-100 text-xs">{lang === 'tr' ? 'Çevrimiçi' : 'Online'}</p>
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                  <p className="text-blue-100 text-xs">
+                    {lang === 'tr' ? 'Llama 3.3 · Çevrimiçi' : 'Llama 3.3 · Online'}
+                  </p>
                 </div>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white transition-colors">
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+              {messages.length > 1 && (
+                <button
+                  onClick={() => setMessages([])}
+                  className="text-white/60 hover:text-white text-xs transition-colors px-2 py-1 rounded-lg hover:bg-white/10">
+                  {lang === 'tr' ? 'Temizle' : 'Clear'}
+                </button>
+              )}
+              <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white transition-colors p-1">
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Mesajlar */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {messages.map(msg => (
-              <div key={msg.id} className={`flex gap-2 ${msg.from === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                {msg.from === 'bot' && (
-                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">L</div>
-                )}
-                <div className={`max-w-[80%] flex flex-col gap-1 ${msg.from === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
-                    msg.from === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white text-gray-800 shadow-sm rounded-tl-sm border border-gray-100'
-                  }`}>
-                    {msg.text}
+              <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                {msg.role === 'assistant' && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-700 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <Bot size={14} className="text-white" />
                   </div>
-                  {msg.products && msg.products.length > 0 && (
-                    <div className="space-y-1.5 w-full">
-                      {msg.products.map(p => (
-                        <button key={p.id} onClick={() => { setOpen(false); navigate(`/urun/${p.id}`) }}
-                          className="w-full flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-2 hover:bg-blue-50 hover:border-blue-200 transition-all text-left shadow-sm">
-                          <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                            {p.image ? <img src={p.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200" />}
-                          </div>
-                          <span className="text-xs font-medium text-gray-800 truncate">
-                            {lang === 'tr' ? p.name_tr : p.name_en}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                )}
+                <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-tr-sm'
+                    : 'bg-white text-gray-800 shadow-sm rounded-tl-sm border border-gray-100'
+                }`}>
+                  {formatText(msg.content)}
                 </div>
               </div>
             ))}
+
+            {/* Yazıyor animasyonu */}
+            {loading && (
+              <div className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-700 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Bot size={14} className="text-white" />
+                </div>
+                <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Hızlı sorular */}
-          {messages.length <= 1 && (
-            <div className="px-3 py-2 flex gap-2 overflow-x-auto bg-gray-50 border-t border-gray-100">
+          {/* Hızlı sorular — sadece başta */}
+          {messages.length <= 1 && !loading && (
+            <div className="px-3 py-2 flex gap-2 overflow-x-auto bg-gray-50 border-t border-gray-100 flex-shrink-0">
               {quickQuestions.map(q => (
-                <button key={q} onClick={() => {
-                  setMessages(prev => [...prev, { from: 'user', text: q, id: Date.now() }])
-                  setTimeout(() => processQuery(q), 400)
-                }}
-                  className="flex-shrink-0 text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full hover:border-blue-400 hover:text-blue-600 transition-colors">
+                <button key={q} onClick={() => sendMessage(q)}
+                  className="flex-shrink-0 text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full hover:border-blue-400 hover:text-blue-600 transition-colors whitespace-nowrap">
                   {q}
                 </button>
               ))}
@@ -157,17 +185,27 @@ export default function ChatBot() {
           )}
 
           {/* Input */}
-          <div className="p-3 bg-white border-t border-gray-100">
+          <div className="p-3 bg-white border-t border-gray-100 flex-shrink-0">
             <div className="flex items-center gap-2 bg-gray-50 rounded-2xl px-3 py-2 border border-gray-200 focus-within:border-blue-400 transition-colors">
-              <input type="text" value={input} onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-                placeholder={lang === 'tr' ? 'Mesaj yazın...' : 'Type a message...'}
-                className="flex-1 text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400" />
-              <button onClick={handleSend} disabled={!input.trim()}
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                placeholder={lang === 'tr' ? 'Sorunuzu yazın...' : 'Type your question...'}
+                disabled={loading}
+                className="flex-1 text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400 disabled:opacity-50" />
+              <button
+                onClick={() => sendMessage()}
+                disabled={!input.trim() || loading}
                 className="w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 text-white rounded-xl flex items-center justify-center transition-colors flex-shrink-0">
-                <Send size={14} />
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               </button>
             </div>
+            <p className="text-center text-gray-300 text-xs mt-1.5">
+              Powered by Groq · Llama 3.3 70B
+            </p>
           </div>
         </div>
       )}
