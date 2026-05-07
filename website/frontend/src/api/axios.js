@@ -11,11 +11,14 @@ api.interceptors.request.use(cfg => {
 api.interceptors.response.use(
   res => res,
   err => {
+    // Sadece admin sayfasındayken ve gerçekten 401 geldiğinde yönlendir
+    // window.location yerine flag kullan — hard redirect crash'e yol açıyor
     if (err.response?.status === 401) {
-      const isAdminPath = window.location.pathname.startsWith('/admin')
-      if (isAdminPath && window.location.pathname !== '/admin/login') {
+      const path = window.location.pathname
+      if (path.startsWith('/admin') && path !== '/admin/login') {
         localStorage.removeItem('laves_admin_token')
-        window.location.href = '/admin/login'
+        // Soft redirect: React Router'ı bozmamak için
+        window.location.replace('/admin/login')
       }
     }
     return Promise.reject(err)

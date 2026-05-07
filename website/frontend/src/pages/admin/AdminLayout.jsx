@@ -1,6 +1,28 @@
 import React from 'react'
 import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom'
-import { Package, Tag, MessageSquare, Settings, LogOut } from 'lucide-react'
+import { Package, Tag, MessageSquare, Settings, LogOut, BookOpen } from 'lucide-react'
+
+// Crash'leri yakala, sayfayı beyaz bırakma
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(e) { return { error: e } }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full p-12 text-center">
+          <p className="text-red-500 font-semibold mb-2">Bir hata oluştu</p>
+          <p className="text-gray-400 text-sm mb-4">{this.state.error?.message}</p>
+          <button
+            onClick={() => this.setState({ error: null })}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition-colors">
+            Tekrar Dene
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 export default function AdminLayout() {
   const navigate = useNavigate()
@@ -18,6 +40,7 @@ export default function AdminLayout() {
   const links = [
     { to: '/admin/products', icon: Package, label: 'Ürünler' },
     { to: '/admin/categories', icon: Tag, label: 'Kategoriler' },
+    { to: '/admin/blog', icon: BookOpen, label: 'Blog' },
     { to: '/admin/messages', icon: MessageSquare, label: 'Mesajlar' },
     { to: '/admin/settings', icon: Settings, label: 'Ayarlar' },
   ]
@@ -51,7 +74,9 @@ export default function AdminLayout() {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
     </div>
   )

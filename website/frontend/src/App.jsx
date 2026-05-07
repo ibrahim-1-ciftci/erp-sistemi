@@ -15,6 +15,7 @@ import AdminProductForm from './pages/admin/AdminProductForm'
 import AdminCategories from './pages/admin/AdminCategories'
 import AdminMessages from './pages/admin/AdminMessages'
 import AdminSettings from './pages/admin/AdminSettings'
+import AdminBlog from './pages/admin/AdminBlog'
 import ChatBot from './components/ChatBot'
 
 function PublicLayout({ children }) {
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="products/new" element={<AdminProductForm />} />
         <Route path="products/:id" element={<AdminProductForm />} />
         <Route path="categories" element={<AdminCategories />} />
+        <Route path="blog" element={<AdminBlog />} />
         <Route path="messages" element={<AdminMessages />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>

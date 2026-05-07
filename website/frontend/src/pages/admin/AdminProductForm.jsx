@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Upload, X, GripVertical, Star } from 'lucide-react'
+import { ArrowLeft, Upload, X, Star, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
@@ -18,11 +18,15 @@ export default function AdminProductForm() {
 
   const [form, setForm] = useState(EMPTY)
   const [categories, setCategories] = useState([])
-  const [existingImages, setExistingImages] = useState([]) // {id, image}
+  const [existingImages, setExistingImages] = useState([]) // [{id, image}]
   const [newFiles, setNewFiles] = useState([])
   const [newPreviews, setNewPreviews] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('tr')
+
+  // Drag state
+  const dragIdx = useRef(null)
+  const dragOverIdx = useRef(null)
 
   useEffect(() => {
     api.get('/categories').then(r => setCategories(r.data)).catch(() => {})
@@ -35,8 +39,10 @@ export default function AdminProductForm() {
           details_tr: p.details_tr || '', details_en: p.details_en || '',
           category_id: p.category_id || '', is_active: p.is_active, order: p.order
         })
-        // image_ids backend'den gelmiyor, index kullanacağız
-        setExistingImages((p.images || []).map((img, i) => ({ id: (p.image_ids || [])[i], image: img })))
+        setExistingImages((p.images || []).map((img, i) => ({
+          id: (p.image_ids || [])[i] ?? null,
+          image: img
+        })))
       }).catch(() => navigate('/admin/products'))
     }
   }, [id])
@@ -51,6 +57,58 @@ export default function AdminProductForm() {
   const removeNewFile = i => {
     setNewFiles(prev => prev.filter((_, idx) => idx !== i))
     setNewPreviews(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  // Mevcut görseli ana yap (backend'e bildir)
+  const setPrimary = async (img) => {
+    if (!img.id) return
+    try {
+      await api.put(`/products/${id}/images/${img.id}/primary`)
+      const r = await api.get(`/products/${id}`)
+      setExistingImages((r.data.images || []).map((im, i) => ({
+        id: (r.data.image_ids || [])[i] ?? null,
+        image: im
+      })))
+      toast.success('Ana görsel güncellendi')
+    } catch {
+      toast.error('Hata oluştu')
+    }
+  }
+
+  // Mevcut görseli sil
+  const deleteImage = async (img) => {
+    if (!img.id) return
+    if (!confirm('Bu görseli silmek istiyor musunuz?')) return
+    try {
+      await api.delete(`/products/${id}/images/${img.id}`)
+      setExistingImages(prev => prev.filter(im => im.id !== img.id))
+      toast.success('Görsel silindi')
+    } catch {
+      toast.error('Hata oluştu')
+    }
+  }
+
+  // Drag & drop sıralama — sadece local state, kaydet butonuyla backend'e gönder
+  const onDragStart = (i) => { dragIdx.current = i }
+  const onDragOver = (e, i) => { e.preventDefault(); dragOverIdx.current = i }
+  const onDrop = async () => {
+    const from = dragIdx.current
+    const to = dragOverIdx.current
+    if (from === null || to === null || from === to) return
+    const reordered = [...existingImages]
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(to, 0, moved)
+    setExistingImages(reordered)
+    dragIdx.current = null
+    dragOverIdx.current = null
+
+    // İlk sıraya taşındıysa backend'e bildir
+    if (to === 0 && moved.id) {
+      try {
+        await api.put(`/products/${id}/images/${moved.id}/primary`)
+        toast.success('Ana görsel güncellendi')
+      } catch { /* sessiz */ }
+    }
   }
 
   const handleSubmit = async e => {
@@ -80,7 +138,6 @@ export default function AdminProductForm() {
 
   return (
     <div className="p-6 max-w-5xl">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button onClick={() => navigate('/admin/products')}
           className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
@@ -95,7 +152,7 @@ export default function AdminProductForm() {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Sol kolon: Ana bilgiler */}
+          {/* Sol: Ana bilgiler */}
           <div className="lg:col-span-2 space-y-6">
 
             {/* Dil sekmeleri */}
@@ -122,7 +179,7 @@ export default function AdminProductForm() {
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                     Kısa Özet {activeTab === 'tr' ? '(TR)' : '(EN)'}
-                    <span className="ml-1 text-gray-400 normal-case font-normal">— Ürün sayfasında fotoğrafın yanında gösterilir</span>
+                    <span className="ml-1 text-gray-400 normal-case font-normal">— Ürün sayfasında fotoğrafın yanında</span>
                   </label>
                   <textarea rows={3}
                     value={activeTab === 'tr' ? form.description_tr : form.description_en}
@@ -133,12 +190,12 @@ export default function AdminProductForm() {
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                     Detaylı Açıklama {activeTab === 'tr' ? '(TR)' : '(EN)'}
-                    <span className="ml-1 text-gray-400 normal-case font-normal">— Fotoğrafın altında gösterilir</span>
+                    <span className="ml-1 text-gray-400 normal-case font-normal">— Fotoğrafın altında</span>
                   </label>
                   <textarea rows={8}
                     value={activeTab === 'tr' ? form.details_tr : form.details_en}
                     onChange={e => f(activeTab === 'tr' ? 'details_tr' : 'details_en', e.target.value)}
-                    placeholder={activeTab === 'tr' ? 'Ürün özellikleri, kullanım alanları, avantajlar...' : 'Product features, usage areas, advantages...'}
+                    placeholder={activeTab === 'tr' ? 'Ürün özellikleri, kullanım alanları...' : 'Product features, usage areas...'}
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
                 </div>
               </div>
@@ -146,45 +203,62 @@ export default function AdminProductForm() {
 
             {/* Görseller */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
                 Ürün Görselleri
-                <span className="text-xs font-normal text-gray-400">— İlk görsel ana görsel olarak kullanılır</span>
               </h3>
+              <p className="text-xs text-gray-400 mb-4">
+                İlk görsel ana görsel olarak kullanılır. Sürükleyerek sırayı değiştirebilirsiniz.
+                <span className="ml-1 text-blue-500">⭐ = Ana görsel</span>
+              </p>
 
-              {/* Mevcut görseller */}
+              {/* Mevcut görseller — drag & drop */}
               {existingImages.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Mevcut Görseller</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Mevcut Görseller
+                    <span className="ml-2 font-normal text-gray-400 normal-case">Sürükleyerek sırala, ⭐ ile ana yap</span>
+                  </p>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                     {existingImages.map((img, i) => (
-                      <div key={img.id || i} className="relative group aspect-square">
-                        <img src={img.image} alt="" className="w-full h-full object-cover rounded-xl border-2 border-gray-200" />
+                      <div
+                        key={img.id ?? i}
+                        draggable
+                        onDragStart={() => onDragStart(i)}
+                        onDragOver={e => onDragOver(e, i)}
+                        onDrop={onDrop}
+                        className="relative group aspect-square cursor-grab active:cursor-grabbing">
+                        <img src={img.image} alt=""
+                          className={`w-full h-full object-cover rounded-xl border-2 transition-all ${i === 0 ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`} />
+                        {/* Ana görsel rozeti */}
                         {i === 0 && (
-                          <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
-                            <Star size={10} /> Ana
+                          <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-lg flex items-center gap-0.5 shadow">
+                            <Star size={9} fill="white" /> Ana
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                        {/* Sıra numarası */}
+                        {i > 0 && (
+                          <div className="absolute top-1 left-1 bg-black/50 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                            {i + 1}
+                          </div>
+                        )}
+                        {/* Hover aksiyonlar */}
+                        <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
                           {i !== 0 && (
-                            <button type="button"
-                              onClick={async () => {
-                                await api.put(`/products/${id}/images/${img.id}/primary`)
-                                const r = await api.get(`/products/${id}`)
-                                setExistingImages((r.data.images || []).map((im, idx) => ({ id: r.data.image_ids[idx], image: im })))
-                              }}
-                              className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs flex items-center justify-center" title="Ana yap">
-                              <Star size={10} />
+                            <button type="button" onClick={() => setPrimary(img)}
+                              title="Ana görsel yap"
+                              className="w-7 h-7 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center justify-center shadow">
+                              <Star size={12} />
                             </button>
                           )}
-                          <button type="button"
-                            onClick={async () => {
-                              if (!confirm('Bu görseli silmek istiyor musunuz?')) return
-                              await api.delete(`/products/${id}/images/${img.id}`)
-                              setExistingImages(prev => prev.filter(im => im.id !== img.id))
-                            }}
-                            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs flex items-center justify-center">
-                            <X size={10} />
+                          <button type="button" onClick={() => deleteImage(img)}
+                            title="Sil"
+                            className="w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow">
+                            <X size={12} />
                           </button>
+                        </div>
+                        {/* Drag handle */}
+                        <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <GripVertical size={14} className="text-white drop-shadow" />
                         </div>
                       </div>
                     ))}
@@ -202,12 +276,12 @@ export default function AdminProductForm() {
                         <div key={i} className="relative group aspect-square">
                           <img src={src} alt="" className="w-full h-full object-cover rounded-xl border border-gray-200" />
                           <button type="button" onClick={() => removeNewFile(i)}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center shadow">
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full hidden group-hover:flex items-center justify-center shadow">
                             <X size={10} />
                           </button>
                           {existingImages.length === 0 && i === 0 && (
                             <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
-                              <Star size={10} /> Ana
+                              <Star size={9} fill="white" /> Ana
                             </div>
                           )}
                         </div>
@@ -226,7 +300,7 @@ export default function AdminProductForm() {
             </div>
           </div>
 
-          {/* Sağ kolon: Ayarlar */}
+          {/* Sağ: Ayarlar */}
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
               <h3 className="font-semibold text-gray-900">Ürün Ayarları</h3>
@@ -259,7 +333,6 @@ export default function AdminProductForm() {
               </div>
             </div>
 
-            {/* Kaydet butonu */}
             <button type="submit" disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-2xl transition-all hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-60">
               {loading ? 'Kaydediliyor...' : (isEdit ? 'Güncelle' : 'Ürün Ekle')}
