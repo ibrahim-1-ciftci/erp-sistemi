@@ -8,18 +8,15 @@ api.interceptors.request.use(cfg => {
   return cfg
 })
 
+// 401 gelirse token'ı sil ama ASLA otomatik redirect yapma.
+// AdminLayout zaten token yoksa <Navigate> ile yönlendiriyor.
+// Hard redirect (window.location) React render döngüsünü kırıyor → beyaz ekran.
 api.interceptors.response.use(
   res => res,
   err => {
-    // Sadece admin sayfasındayken ve gerçekten 401 geldiğinde yönlendir
-    // window.location yerine flag kullan — hard redirect crash'e yol açıyor
     if (err.response?.status === 401) {
-      const path = window.location.pathname
-      if (path.startsWith('/admin') && path !== '/admin/login') {
-        localStorage.removeItem('laves_admin_token')
-        // Soft redirect: React Router'ı bozmamak için
-        window.location.replace('/admin/login')
-      }
+      localStorage.removeItem('laves_admin_token')
+      // Redirect yok — AdminLayout'un kendi <Navigate> kontrolü devreye girer
     }
     return Promise.reject(err)
   }
