@@ -90,7 +90,7 @@ export default function ChatBot() {
           <a
             key={`link-${i}-${match.index}`}
             href={match[2]}
-            onClick={(e) => { e.preventDefault(); navigate(match[2]); setOpen(false) }}
+            onClick={(e) => { e.preventDefault(); navigate(match[2]) }}
             className="text-blue-600 hover:text-blue-700 underline font-medium cursor-pointer">
             {match[1]}
           </a>
