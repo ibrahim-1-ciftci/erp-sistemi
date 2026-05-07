@@ -6,7 +6,7 @@ import httpx
 from ..core.database import get_db
 from ..core.config import settings
 from ..models.product import Product
-from ..models.setting import Setting
+from ..models.setting import SiteSetting
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -48,9 +48,8 @@ def get_products_context_en(db: Session) -> str:
     return "\n".join(lines)
 
 def get_company_info(db: Session) -> dict:
-    settings = db.query(Setting).all()
-    info = {s.key: s.value for s in settings}
-    return info
+    settings = db.query(SiteSetting).all()
+    return {s.key: s.value for s in settings}
 
 @router.post("")
 async def chat(req: ChatRequest, db: Session = Depends(get_db)):
