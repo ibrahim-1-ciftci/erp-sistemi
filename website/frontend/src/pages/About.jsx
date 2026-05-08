@@ -2,11 +2,19 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Users, Factory, Star } from 'lucide-react'
 import api from '../api/axios'
+import useSEO from '../hooks/useSEO'
 
 export default function About() {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [settings, setSettings] = useState({})
+
+  useSEO({
+    title: lang === 'tr' ? 'Hakkımızda' : 'About Us',
+    description: lang === 'tr'
+      ? 'Laves Kimya hakkında bilgi edinin. Profesyonel oto bakım ürünleri üreticisi.'
+      : 'Learn about Laves Chemistry. Professional automotive care products manufacturer.',
+  })
 
   useEffect(() => {
     api.get('/settings').then(r => setSettings(r.data)).catch(() => {})

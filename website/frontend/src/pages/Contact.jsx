@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api/axios'
+import useSEO from '../hooks/useSEO'
 
 export default function Contact() {
   const { t, i18n } = useTranslation()
@@ -10,6 +11,13 @@ export default function Contact() {
   const [settings, setSettings] = useState({})
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
   const [loading, setLoading] = useState(false)
+
+  useSEO({
+    title: lang === 'tr' ? 'İletişim' : 'Contact',
+    description: lang === 'tr'
+      ? 'Laves Kimya ile iletişime geçin. Telefon, e-posta veya WhatsApp ile ulaşın.'
+      : 'Contact Laves Chemistry. Reach us by phone, email or WhatsApp.',
+  })
 
   useEffect(() => {
     api.get('/settings').then(r => setSettings(r.data)).catch(() => {})
