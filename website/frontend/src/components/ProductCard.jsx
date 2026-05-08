@@ -8,6 +8,12 @@ export default function ProductCard({ product }) {
   const navigate = useNavigate()
   const lang = i18n.language
   const [imgLoaded, setImgLoaded] = useState(false)
+  const imgRef = React.useRef(null)
+
+  // Cache'den gelen görseller için onLoad tetiklenmeyebilir
+  React.useEffect(() => {
+    if (imgRef.current?.complete) setImgLoaded(true)
+  }, [])
 
   const name = lang === 'tr' ? product.name_tr : product.name_en
   const desc = lang === 'tr' ? product.description_tr : product.description_en
@@ -28,11 +34,12 @@ export default function ProductCard({ product }) {
           <>
             {!imgLoaded && <div className="absolute inset-0 skeleton" />}
             <img
+              ref={imgRef}
               src={product.image}
               alt={name}
               loading="lazy"
               onLoad={() => setImgLoaded(true)}
-              className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
           </>
         ) : (
