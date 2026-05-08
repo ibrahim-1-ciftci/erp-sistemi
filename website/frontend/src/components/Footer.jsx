@@ -1,62 +1,141 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Phone, Mail, MapPin } from 'lucide-react'
+import { Phone, Mail, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
+import api from '../api/axios'
 
 export default function Footer() {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const year = new Date().getFullYear()
+  const [settings, setSettings] = useState({})
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    api.get('/settings').then(r => setSettings(r.data)).catch(() => {})
+    api.get('/categories').then(r => setCategories(r.data.slice(0, 5))).catch(() => {})
+  }, [])
+
+  const whatsappNum = settings.whatsapp?.replace(/\D/g, '')
+  const waMsg = lang === 'tr' ? 'Merhaba, ürünleriniz hakkında bilgi almak istiyorum.' : 'Hello, I would like to get information about your products.'
 
   return (
     <footer className="bg-gray-950 text-gray-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+      {/* CTA band */}
+      <div className="border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="text-white font-bold text-lg">
+              {lang === 'tr' ? 'Toplu sipariş veya fiyat teklifi mi istiyorsunuz?' : 'Looking for bulk orders or a price quote?'}
+            </p>
+            <p className="text-gray-500 text-sm mt-0.5">
+              {lang === 'tr' ? 'Hemen iletişime geçin, size özel fiyat sunalım.' : 'Contact us now for a custom price offer.'}
+            </p>
+          </div>
+          <div className="flex gap-3 flex-shrink-0">
+            {whatsappNum && (
+              <a href={`https://wa.me/${whatsappNum}?text=${encodeURIComponent(waMsg)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                <MessageCircle size={16} /> WhatsApp
+              </a>
+            )}
+            <Link to="/iletisim"
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+              {lang === 'tr' ? 'İletişim' : 'Contact'} <ArrowUpRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+
           {/* Brand */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
                 <span className="text-white font-black">L</span>
               </div>
               <span className="text-white font-black text-xl">Laves <span className="text-blue-500">Kimya</span></span>
             </div>
-            <p className="text-sm leading-relaxed max-w-xs">
+            <p className="text-sm leading-relaxed text-gray-500">
               {lang === 'tr'
                 ? 'Profesyonel oto bakım ürünleri üreticisi. Kalite ve güvenilirlikte sektör lideri.'
                 : 'Professional automotive care products manufacturer. Industry leader in quality and reliability.'}
             </p>
           </div>
 
-          {/* Links */}
+          {/* Kategoriler */}
           <div>
-            <h4 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">{lang === 'tr' ? 'Sayfalar' : 'Pages'}</h4>
+            <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-widest">
+              {lang === 'tr' ? 'Kategoriler' : 'Categories'}
+            </h4>
             <div className="space-y-2.5 text-sm">
-              <Link to="/" className="block hover:text-white transition-colors">{t('nav.home')}</Link>
-              <Link to="/urunler" className="block hover:text-white transition-colors">{t('nav.products')}</Link>
-              <Link to="/hakkimizda" className="block hover:text-white transition-colors">{t('nav.about')}</Link>
-              <Link to="/iletisim" className="block hover:text-white transition-colors">{t('nav.contact')}</Link>
+              {categories.map(c => (
+                <Link key={c.id} to={`/urunler?cat=${c.id}`}
+                  className="block hover:text-white hover:translate-x-1 transition-all">
+                  {lang === 'tr' ? c.name_tr : c.name_en}
+                </Link>
+              ))}
+              <Link to="/urunler" className="block text-blue-500 hover:text-blue-400 transition-colors text-xs mt-1">
+                {lang === 'tr' ? 'Tüm ürünler →' : 'All products →'}
+              </Link>
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Sayfalar */}
           <div>
-            <h4 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">{t('contact.title')}</h4>
+            <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-widest">
+              {lang === 'tr' ? 'Sayfalar' : 'Pages'}
+            </h4>
             <div className="space-y-2.5 text-sm">
-              <div className="flex items-center gap-2">
-                <Mail size={14} className="text-blue-500 flex-shrink-0" />
-                <span>info@laves.com</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin size={14} className="text-blue-500 flex-shrink-0" />
-                <span>Türkiye</span>
-              </div>
+              <Link to="/" className="block hover:text-white hover:translate-x-1 transition-all">{t('nav.home')}</Link>
+              <Link to="/urunler" className="block hover:text-white hover:translate-x-1 transition-all">{t('nav.products')}</Link>
+              <Link to="/hakkimizda" className="block hover:text-white hover:translate-x-1 transition-all">{t('nav.about')}</Link>
+              <Link to="/iletisim" className="block hover:text-white hover:translate-x-1 transition-all">{t('nav.contact')}</Link>
+            </div>
+          </div>
+
+          {/* İletişim */}
+          <div>
+            <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-widest">{t('contact.title')}</h4>
+            <div className="space-y-3 text-sm">
+              {settings.phone && (
+                <a href={`tel:${settings.phone}`} className="flex items-center gap-2.5 hover:text-white transition-colors group">
+                  <div className="w-7 h-7 bg-white/5 group-hover:bg-blue-600/20 rounded-lg flex items-center justify-center transition-colors">
+                    <Phone size={13} className="text-blue-500" />
+                  </div>
+                  {settings.phone}
+                </a>
+              )}
+              {settings.email && (
+                <a href={`mailto:${settings.email}`} className="flex items-center gap-2.5 hover:text-white transition-colors group">
+                  <div className="w-7 h-7 bg-white/5 group-hover:bg-blue-600/20 rounded-lg flex items-center justify-center transition-colors">
+                    <Mail size={13} className="text-blue-500" />
+                  </div>
+                  {settings.email}
+                </a>
+              )}
+              {settings.address && (
+                <div className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin size={13} className="text-blue-500" />
+                  </div>
+                  <span className="text-xs leading-relaxed">{settings.address}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="border-t border-white/5 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-600">
           <span>© {year} Laves Kimya. {t('footer.rights')}</span>
-          <span className="text-gray-700">laves.com</span>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-700">Türkiye</span>
+            <span className="text-gray-700">·</span>
+            <span className="text-gray-700">laves.com</span>
+          </div>
         </div>
       </div>
     </footer>

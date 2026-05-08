@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
@@ -17,11 +17,22 @@ import AdminMessages from './pages/admin/AdminMessages'
 import AdminSettings from './pages/admin/AdminSettings'
 import ChatBot from './components/ChatBot'
 
+function PageWrapper({ children }) {
+  const location = useLocation()
+  return (
+    <div key={location.pathname} className="page-enter">
+      {children}
+    </div>
+  )
+}
+
 function PublicLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <PageWrapper>{children}</PageWrapper>
+      </main>
       <Footer />
       <WhatsAppButton />
       <ChatBot />

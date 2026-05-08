@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
+import ProductCardSkeleton from '../components/ProductCardSkeleton'
 import useSEO from '../hooks/useSEO'
 
 export default function Products() {
@@ -12,7 +13,7 @@ export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
-
+  const [loadingProducts, setLoadingProducts] = useState(true)
   // URL'den state oku
   const search = searchParams.get('q') || ''
   const activeCategoryId = searchParams.get('cat') ? parseInt(searchParams.get('cat')) : null
@@ -25,7 +26,8 @@ export default function Products() {
   })
 
   useEffect(() => {
-    api.get('/products?active_only=true').then(r => setProducts(r.data)).catch(() => {})
+    setLoadingProducts(true)
+    api.get('/products?active_only=true').then(r => { setProducts(r.data); setLoadingProducts(false) }).catch(() => setLoadingProducts(false))
     api.get('/categories').then(r => setCategories(r.data)).catch(() => {})
   }, [])
 
@@ -110,7 +112,11 @@ export default function Products() {
         </div>
 
         {/* Grid */}
-        {filtered.length === 0 ? (
+        {loadingProducts ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-400 mb-3">{lang === 'tr' ? 'Ürün bulunamadı.' : 'No products found.'}</p>
             <button onClick={() => { setSearch(''); setCategory(null) }}

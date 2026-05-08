@@ -4,11 +4,41 @@
 
 @layer base {
   html { scroll-behavior: smooth; }
-  body { font-family: 'Inter', system-ui, sans-serif; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @layer utilities {
   .text-gradient {
     @apply bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent;
   }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  /* Sayfa geçiş animasyonu */
+  .page-enter {
+    animation: fadeIn 0.35s ease-out;
+  }
+
+  /* Smooth image load */
+  img {
+    transition: opacity 0.3s ease;
+  }
+  img[loading] {
+    opacity: 0;
+  }
 }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
