@@ -1,18 +1,33 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Package, MessageCircle, ArrowRight } from 'lucide-react'
+import api from '../api/axios'
+
+// Şirket WhatsApp numarasını bir kez çek, tüm kartlar paylaşsın
+let cachedWhatsapp = null
+let fetchPromise = null
+function getWhatsapp() {
+  if (cachedWhatsapp !== null) return Promise.resolve(cachedWhatsapp)
+  if (!fetchPromise) {
+    fetchPromise = api.get('/settings')
+      .then(r => { cachedWhatsapp = r.data.whatsapp?.replace(/\D/g, '') || ''; return cachedWhatsapp })
+      .catch(() => { cachedWhatsapp = ''; return '' })
+  }
+  return fetchPromise
+}
 
 export default function ProductCard({ product }) {
   const { i18n, t } = useTranslation()
   const navigate = useNavigate()
   const lang = i18n.language
   const [imgLoaded, setImgLoaded] = useState(false)
-  const imgRef = React.useRef(null)
+  const [whatsapp, setWhatsapp] = useState(cachedWhatsapp || '')
+  const imgRef = useRef(null)
 
-  // Cache'den gelen görseller için onLoad tetiklenmeyebilir
-  React.useEffect(() => {
+  useEffect(() => {
     if (imgRef.current?.complete) setImgLoaded(true)
+    if (!whatsapp) getWhatsapp().then(setWhatsapp)
   }, [])
 
   const name = lang === 'tr' ? product.name_tr : product.name_en
@@ -22,6 +37,9 @@ export default function ProductCard({ product }) {
   const waMsg = lang === 'tr'
     ? `Merhaba, "${name}" ürünü hakkında bilgi ve fiyat almak istiyorum.`
     : `Hello, I would like to get information and pricing for "${name}".`
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(waMsg)}`
+    : `https://wa.me/?text=${encodeURIComponent(waMsg)}`
 
   return (
     <div
@@ -60,11 +78,11 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Hover overlay — Teklif Al */}
+        {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
           <div className="flex gap-2 translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(waMsg)}`}
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
