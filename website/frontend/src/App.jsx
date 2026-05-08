@@ -15,6 +15,7 @@ import AdminProductForm from './pages/admin/AdminProductForm'
 import AdminCategories from './pages/admin/AdminCategories'
 import AdminMessages from './pages/admin/AdminMessages'
 import AdminSettings from './pages/admin/AdminSettings'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import ChatBot from './components/ChatBot'
 
 function PageWrapper({ children }) {
@@ -53,7 +54,7 @@ export default function App() {
       {/* Admin */}
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminProducts />} />
+        <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="products/new" element={<AdminProductForm />} />
         <Route path="products/:id" element={<AdminProductForm />} />
