@@ -64,6 +64,20 @@ def parse_category_id(val) -> Optional[int]:
         return v if v > 0 else None
     except (TypeError, ValueError):
         return None
+
+def parse_float(val) -> Optional[float]:
+    try:
+        v = float(val)
+        return v if v > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+def parse_int(val) -> Optional[int]:
+    try:
+        v = int(val)
+        return v if v > 0 else None
+    except (TypeError, ValueError):
+        return None
     try:
         v = float(val)
         return v if v > 0 else None
