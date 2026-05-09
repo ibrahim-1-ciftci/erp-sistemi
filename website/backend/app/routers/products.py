@@ -58,7 +58,12 @@ def save_image(image: UploadFile) -> str:
         shutil.copyfileobj(image.file, f)
     return f"/uploads/{filename}"
 
-def parse_float(val) -> Optional[float]:
+def parse_category_id(val) -> Optional[int]:
+    try:
+        v = int(val)
+        return v if v > 0 else None
+    except (TypeError, ValueError):
+        return None
     try:
         v = float(val)
         return v if v > 0 else None
@@ -96,7 +101,7 @@ def create_product(
     description_en: str = Form(""),
     details_tr: str = Form(""),
     details_en: str = Form(""),
-    category_id: Optional[int] = Form(None),
+    category_id: Optional[str] = Form(None),
     is_active: bool = Form(True),
     order: int = Form(0),
     price: Optional[str] = Form(None),
@@ -115,7 +120,7 @@ def create_product(
         name_tr=name_tr, name_en=name_en,
         description_tr=description_tr, description_en=description_en,
         details_tr=details_tr, details_en=details_en,
-        category_id=category_id, is_active=is_active, order=order,
+        category_id=parse_category_id(category_id), is_active=is_active, order=order,
         price=parse_float(price),
         price_discounted=parse_float(price_discounted),
         discount_percent=parse_int(discount_percent),
@@ -146,7 +151,7 @@ def update_product(
     description_en: str = Form(""),
     details_tr: str = Form(""),
     details_en: str = Form(""),
-    category_id: Optional[int] = Form(None),
+    category_id: Optional[str] = Form(None),
     is_active: bool = Form(True),
     order: int = Form(0),
     price: Optional[str] = Form(None),
@@ -171,7 +176,7 @@ def update_product(
     p.description_en = description_en
     p.details_tr = details_tr
     p.details_en = details_en
-    p.category_id = category_id
+    p.category_id = parse_category_id(category_id)
     p.is_active = is_active
     p.order = order
     p.price = parse_float(price)
