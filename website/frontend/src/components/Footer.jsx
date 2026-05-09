@@ -131,10 +131,24 @@ export default function Footer() {
 
         <div className="border-t border-white/5 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-600">
           <span>© {year} Laves Kimya. {t('footer.rights')}</span>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-700">Türkiye</span>
-            <span className="text-gray-700">·</span>
-            <span className="text-gray-700">laves.com</span>
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            <Link to="/gizlilik-politikasi" className="hover:text-gray-400 transition-colors">
+              {lang === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}
+            </Link>
+            <span>·</span>
+            <Link to="/mesafeli-satis-sozlesmesi" className="hover:text-gray-400 transition-colors">
+              {lang === 'tr' ? 'Satış Sözleşmesi' : 'Sales Agreement'}
+            </Link>
+            <span>·</span>
+            <Link to="/iade-iptal" className="hover:text-gray-400 transition-colors">
+              {lang === 'tr' ? 'İade & İptal' : 'Returns'}
+            </Link>
+            <span>·</span>
+            <Link to="/teslimat" className="hover:text-gray-400 transition-colors">
+              {lang === 'tr' ? 'Teslimat' : 'Shipping'}
+            </Link>
+            <span>·</span>
+            <span className="text-gray-700">laveskimya.com</span>
           </div>
         </div>
       </div>

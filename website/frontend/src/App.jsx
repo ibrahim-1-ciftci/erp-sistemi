@@ -17,6 +17,10 @@ import AdminMessages from './pages/admin/AdminMessages'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ChatBot from './components/ChatBot'
+import Privacy from './pages/legal/Privacy'
+import SalesContract from './pages/legal/SalesContract'
+import Returns from './pages/legal/Returns'
+import Shipping from './pages/legal/Shipping'
 
 function PageWrapper({ children }) {
   const location = useLocation()
@@ -50,6 +54,10 @@ export default function App() {
       <Route path="/urun/:id" element={<PublicLayout><ProductDetail /></PublicLayout>} />
       <Route path="/hakkimizda" element={<PublicLayout><About /></PublicLayout>} />
       <Route path="/iletisim" element={<PublicLayout><Contact /></PublicLayout>} />
+      <Route path="/gizlilik-politikasi" element={<PublicLayout><Privacy /></PublicLayout>} />
+      <Route path="/mesafeli-satis-sozlesmesi" element={<PublicLayout><SalesContract /></PublicLayout>} />
+      <Route path="/iade-iptal" element={<PublicLayout><Returns /></PublicLayout>} />
+      <Route path="/teslimat" element={<PublicLayout><Shipping /></PublicLayout>} />
 
       {/* Admin */}
       <Route path="/admin/login" element={<AdminLogin />} />
