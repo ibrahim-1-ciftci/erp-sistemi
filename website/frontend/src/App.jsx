@@ -16,6 +16,7 @@ import AdminCategories from './pages/admin/AdminCategories'
 import AdminMessages from './pages/admin/AdminMessages'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminOrders from './pages/admin/AdminOrders'
 import ChatBot from './components/ChatBot'
 import Privacy from './pages/legal/Privacy'
 import SalesContract from './pages/legal/SalesContract'
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="products/new" element={<AdminProductForm />} />
         <Route path="products/:id" element={<AdminProductForm />} />
         <Route path="categories" element={<AdminCategories />} />
+        <Route path="orders" element={<AdminOrders />} />
         <Route path="messages" element={<AdminMessages />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>

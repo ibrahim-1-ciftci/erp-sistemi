@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Package, Tag, MessageSquare, Eye, TrendingUp, AlertCircle } from 'lucide-react'
+import { Package, Tag, MessageSquare, Eye, TrendingUp, AlertCircle, ShoppingBag } from 'lucide-react'
 import api from '../../api/axios'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const [stats, setStats] = useState({ products: 0, active: 0, categories: 0, messages: 0, unread: 0 })
+  const [stats, setStats] = useState({ products: 0, active: 0, categories: 0, messages: 0, unread: 0, orders: 0, pendingOrders: 0 })
   const [recentMessages, setRecentMessages] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -14,13 +14,16 @@ export default function AdminDashboard() {
       api.get('/products'),
       api.get('/categories'),
       api.get('/contact'),
-    ]).then(([p, c, m]) => {
+      api.get('/orders'),
+    ]).then(([p, c, m, o]) => {
       setStats({
         products: p.data.length,
         active: p.data.filter(x => x.is_active).length,
         categories: c.data.length,
         messages: m.data.length,
         unread: m.data.filter(x => !x.is_read).length,
+        orders: o.data.length,
+        pendingOrders: o.data.filter(x => x.status === 'pending').length,
       })
       setRecentMessages(m.data.slice(0, 3))
       setLoading(false)
@@ -30,6 +33,7 @@ export default function AdminDashboard() {
   const cards = [
     { label: 'Toplam Ürün', value: stats.products, sub: `${stats.active} aktif`, icon: Package, color: 'blue', path: '/admin/products' },
     { label: 'Kategoriler', value: stats.categories, sub: 'kategori', icon: Tag, color: 'purple', path: '/admin/categories' },
+    { label: 'Siparişler', value: stats.orders, sub: stats.pendingOrders > 0 ? `${stats.pendingOrders} bekliyor` : 'tümü işlendi', icon: ShoppingBag, color: stats.pendingOrders > 0 ? 'orange' : 'green', path: '/admin/orders' },
     { label: 'Mesajlar', value: stats.messages, sub: stats.unread > 0 ? `${stats.unread} okunmamış` : 'tümü okundu', icon: MessageSquare, color: stats.unread > 0 ? 'red' : 'green', path: '/admin/messages' },
   ]
 
@@ -38,6 +42,7 @@ export default function AdminDashboard() {
     purple: 'bg-purple-50 text-purple-600',
     green: 'bg-green-50 text-green-600',
     red: 'bg-red-50 text-red-600',
+    orange: 'bg-orange-50 text-orange-600',
   }
 
   return (
@@ -48,7 +53,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* İstatistik kartları */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map(card => (
           <button key={card.label} onClick={() => navigate(card.path)}
             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-left hover:shadow-md hover:-translate-y-0.5 transition-all group">
@@ -112,6 +117,7 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             {[
               { label: 'Yeni Ürün Ekle', icon: Package, path: '/admin/products/new', color: 'bg-blue-600 hover:bg-blue-700 text-white' },
+              { label: 'Siparişleri Gör', icon: ShoppingBag, path: '/admin/orders', color: 'bg-orange-500 hover:bg-orange-600 text-white' },
               { label: 'Kategori Ekle', icon: Tag, path: '/admin/categories', color: 'bg-purple-600 hover:bg-purple-700 text-white' },
               { label: 'Mesajları Gör', icon: MessageSquare, path: '/admin/messages', color: 'bg-gray-100 hover:bg-gray-200 text-gray-700' },
               { label: 'Siteyi Görüntüle', icon: Eye, path: '/', color: 'bg-gray-100 hover:bg-gray-200 text-gray-700', external: true },

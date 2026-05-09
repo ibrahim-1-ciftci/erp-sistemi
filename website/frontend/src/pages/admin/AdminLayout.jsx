@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom'
-import { Package, Tag, MessageSquare, Settings, LogOut, LayoutDashboard } from 'lucide-react'
+import { Package, Tag, MessageSquare, Settings, LogOut, LayoutDashboard, ShoppingBag } from 'lucide-react'
 import api from '../../api/axios'
 
 class ErrorBoundary extends React.Component {
@@ -27,10 +27,12 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const token = localStorage.getItem('laves_admin_token')
   const [unread, setUnread] = useState(0)
+  const [pendingOrders, setPendingOrders] = useState(0)
 
   useEffect(() => {
     if (token) {
       api.get('/contact').then(r => setUnread(r.data.filter(m => !m.is_read).length)).catch(() => {})
+      api.get('/orders').then(r => setPendingOrders(r.data.filter(o => o.status === 'pending').length)).catch(() => {})
     }
   }, [token])
 
@@ -45,6 +47,7 @@ export default function AdminLayout() {
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
     { to: '/admin/products', icon: Package, label: 'Ürünler' },
     { to: '/admin/categories', icon: Tag, label: 'Kategoriler' },
+    { to: '/admin/orders', icon: ShoppingBag, label: 'Siparişler', badge: pendingOrders },
     { to: '/admin/messages', icon: MessageSquare, label: 'Mesajlar', badge: unread },
     { to: '/admin/settings', icon: Settings, label: 'Ayarlar' },
   ]
