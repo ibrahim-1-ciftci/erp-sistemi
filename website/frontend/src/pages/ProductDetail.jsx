@@ -178,13 +178,6 @@ export default function ProductDetail() {
                   {lang === 'tr' ? 'WhatsApp ile Fiyat Al' : 'Get Price via WhatsApp'}
                 </a>
               )}
-              {settings.phone && (
-                <a href={`tel:${settings.phone}`}
-                  className="flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/25 w-full">
-                  <Phone size={20} />
-                  {settings.phone}
-                </a>
-              )}
               <Link to="/iletisim"
                 className="flex items-center justify-center gap-2 border-2 border-gray-200 hover:border-blue-400 text-gray-700 hover:text-blue-600 font-semibold py-3.5 px-6 rounded-2xl transition-all w-full">
                 {t('contact.title')}
