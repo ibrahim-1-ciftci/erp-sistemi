@@ -138,7 +138,11 @@ export default function AdminProductForm() {
       }
       navigate('/admin/products')
     } catch (err) {
-      toast.error('Hata: ' + (err.response?.data?.detail || err.message))
+      const detail = err.response?.data?.detail
+      const msg = Array.isArray(detail)
+        ? detail.map(d => d.msg || JSON.stringify(d)).join(', ')
+        : (typeof detail === 'string' ? detail : err.message)
+      toast.error('Hata: ' + msg)
     } finally {
       setLoading(false)
     }
