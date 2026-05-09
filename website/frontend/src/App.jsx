@@ -21,6 +21,9 @@ import Privacy from './pages/legal/Privacy'
 import SalesContract from './pages/legal/SalesContract'
 import Returns from './pages/legal/Returns'
 import Shipping from './pages/legal/Shipping'
+import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
+import OrderSuccess from './pages/OrderSuccess'
 
 function PageWrapper({ children }) {
   const location = useLocation()
@@ -58,6 +61,9 @@ export default function App() {
       <Route path="/mesafeli-satis-sozlesmesi" element={<PublicLayout><SalesContract /></PublicLayout>} />
       <Route path="/iade-iptal" element={<PublicLayout><Returns /></PublicLayout>} />
       <Route path="/teslimat" element={<PublicLayout><Shipping /></PublicLayout>} />
+      <Route path="/sepet" element={<PublicLayout><Cart /></PublicLayout>} />
+      <Route path="/siparis" element={<PublicLayout><Checkout /></PublicLayout>} />
+      <Route path="/siparis-tamamlandi" element={<PublicLayout><OrderSuccess /></PublicLayout>} />
 
       {/* Admin */}
       <Route path="/admin/login" element={<AdminLogin />} />

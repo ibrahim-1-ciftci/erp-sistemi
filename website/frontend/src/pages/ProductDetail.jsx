@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Package, ZoomIn, X, Phone } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Package, ZoomIn, X, Phone, ShoppingCart } from 'lucide-react'
 import api from '../api/axios'
 import useSEO from '../hooks/useSEO'
+import { cartStore } from '../store/cartStore'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -15,6 +16,13 @@ export default function ProductDetail() {
   const [activeImg, setActiveImg] = useState(0)
   const [loading, setLoading] = useState(true)
   const [lightbox, setLightbox] = useState(false)
+  const [addedToCart, setAddedToCart] = useState(false)
+
+  const handleAddToCart = () => {
+    cartStore.addItem(product)
+    setAddedToCart(true)
+    setTimeout(() => setAddedToCart(false), 2000)
+  }
 
   useEffect(() => {
     api.get(`/products/${id}`).then(r => { setProduct(r.data); setLoading(false) }).catch(() => navigate('/urunler'))
@@ -151,6 +159,18 @@ export default function ProductDetail() {
             </div>
 
             <div className="mt-auto space-y-3 pt-4 border-t border-gray-100">
+              <button
+                onClick={handleAddToCart}
+                className={`flex items-center justify-center gap-3 font-bold py-4 px-6 rounded-2xl transition-all w-full ${
+                  addedToCart
+                    ? 'bg-green-500 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/25'
+                }`}>
+                <ShoppingCart size={20} />
+                {addedToCart
+                  ? (lang === 'tr' ? '✓ Sepete Eklendi' : '✓ Added to Cart')
+                  : (lang === 'tr' ? 'Sepete Ekle' : 'Add to Cart')}
+              </button>
               {whatsappUrl && (
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-2xl transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/25 w-full">

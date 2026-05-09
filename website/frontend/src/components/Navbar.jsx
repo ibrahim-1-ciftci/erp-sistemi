@@ -94,6 +94,8 @@ function NavSearch({ transparent }) {
   )
 }
 
+import CartButton from './CartButton'
+
 export default function Navbar() {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -159,9 +161,10 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Arama + Dil + Mobil */}
+          {/* Arama + Sepet + Dil + Mobil */}
           <div className="flex items-center gap-3 ml-auto">
             <NavSearch transparent={transparent} />
+            <CartButton transparent={transparent} />
 
             <button onClick={toggleLang}
               className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors flex-shrink-0 ${langBtn}`}>
