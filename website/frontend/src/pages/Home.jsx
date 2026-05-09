@@ -55,27 +55,43 @@ export default function Home() {
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6">
               {lang === 'tr' ? (
                 <>
-                  Profesyonel<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
-                    Oto Bakım
-                  </span>
-                  <br />Ürünleri
+                  {settings.hero_title_tr ? (
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
+                      {settings.hero_title_tr}
+                    </span>
+                  ) : (
+                    <>
+                      Profesyonel<br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
+                        Oto Bakım
+                      </span>
+                      <br />Ürünleri
+                    </>
+                  )}
                 </>
               ) : (
                 <>
-                  Professional<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
-                    Auto Care
-                  </span>
-                  <br />Products
+                  {settings.hero_title_en ? (
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
+                      {settings.hero_title_en}
+                    </span>
+                  ) : (
+                    <>
+                      Professional<br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300">
+                        Auto Care
+                      </span>
+                      <br />Products
+                    </>
+                  )}
                 </>
               )}
             </h1>
 
             <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-lg">
               {lang === 'tr'
-                ? 'Araçlarınız için en kaliteli bakım çözümleri. Kimya bilimi ile mükemmel sonuçlar.'
-                : 'The highest quality care solutions for your vehicles. Perfect results with chemistry science.'}
+                ? (settings.hero_subtitle_tr || 'Araçlarınız için en kaliteli bakım çözümleri. Kimya bilimi ile mükemmel sonuçlar.')
+                : (settings.hero_subtitle_en || 'The highest quality care solutions for your vehicles. Perfect results with chemistry science.')}
             </p>
 
             {/* CTA buttons */}
@@ -102,9 +118,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="grid grid-cols-3 text-center text-white divide-x divide-blue-500">
             {[
-              { val: '30+', label: lang === 'tr' ? 'Ürün Çeşidi' : 'Product Types' },
-              { val: '100%', label: lang === 'tr' ? 'Kalite Kontrol' : 'Quality Control' },
-              { val: 'B2B', label: lang === 'tr' ? 'Kurumsal Satış' : 'Corporate Sales' },
+              { val: settings.stats_1_val || '30+', label: lang === 'tr' ? (settings.stats_1_label_tr || 'Ürün Çeşidi') : 'Product Types' },
+              { val: settings.stats_2_val || '100%', label: lang === 'tr' ? (settings.stats_2_label_tr || 'Kalite Kontrol') : 'Quality Control' },
+              { val: settings.stats_3_val || 'B2B', label: lang === 'tr' ? (settings.stats_3_label_tr || 'Kurumsal Satış') : 'Corporate Sales' },
             ].map((s, i) => (
               <div key={i} className="py-1">
                 <div className="text-2xl md:text-3xl font-black">{s.val}</div>

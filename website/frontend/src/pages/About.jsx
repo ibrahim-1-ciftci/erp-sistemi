@@ -23,9 +23,9 @@ export default function About() {
   const about = lang === 'tr' ? settings.about_tr : settings.about_en
 
   const stats = [
-    { icon: Factory, value: '30+', label: lang === 'tr' ? 'Ürün Çeşidi' : 'Product Types' },
-    { icon: Star, value: '100%', label: lang === 'tr' ? 'Kalite Kontrol' : 'Quality Control' },
-    { icon: Users, value: 'B2B', label: lang === 'tr' ? 'Kurumsal Satış' : 'Corporate Sales' },
+    { icon: Factory, value: settings.about_stat1_val || '30+', label: lang === 'tr' ? (settings.about_stat1_label_tr || 'Ürün Çeşidi') : 'Product Types' },
+    { icon: Star, value: settings.about_stat2_val || '100%', label: lang === 'tr' ? (settings.about_stat2_label_tr || 'Kalite Kontrol') : 'Quality Control' },
+    { icon: Users, value: settings.about_stat3_val || 'B2B', label: lang === 'tr' ? (settings.about_stat3_label_tr || 'Kurumsal Satış') : 'Corporate Sales' },
   ]
 
   return (
@@ -33,7 +33,9 @@ export default function About() {
       {/* Hero */}
       <div className="bg-gradient-to-br from-blue-900 to-blue-700 text-white py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">{t('about.title')}</h1>
+          <h1 className="text-4xl font-bold mb-4">
+            {lang === 'tr' ? (settings.about_title_tr || t('about.title')) : (settings.about_title_en || t('about.title'))}
+          </h1>
           <p className="text-blue-100 text-lg">Laves Kimya</p>
         </div>
       </div>
@@ -59,8 +61,8 @@ export default function About() {
           </h2>
           <p className="text-gray-600 leading-relaxed text-lg">
             {about || (lang === 'tr'
-              ? 'Laves Kimya, oto bakım ürünleri alanında kaliteli ve güvenilir çözümler sunan bir üretim firmasıdır.'
-              : 'Laves Chemistry is a manufacturing company offering quality and reliable solutions in automotive care products.')}
+              ? (settings.about_tr || 'Laves Kimya, oto bakım ürünleri alanında kaliteli ve güvenilir çözümler sunan bir üretim firmasıdır.')
+              : (settings.about_en || 'Laves Chemistry is a manufacturing company offering quality and reliable solutions in automotive care products.'))}
           </p>
         </div>
       </div>
