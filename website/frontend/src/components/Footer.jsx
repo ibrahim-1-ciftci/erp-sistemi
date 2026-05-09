@@ -94,6 +94,8 @@ export default function Footer() {
               <Link to="/urunler" className="block hover:text-white hover:translate-x-1 transition-all">{t('nav.products')}</Link>
               <Link to="/hakkimizda" className="block hover:text-white hover:translate-x-1 transition-all">{t('nav.about')}</Link>
               <Link to="/iletisim" className="block hover:text-white hover:translate-x-1 transition-all">{t('nav.contact')}</Link>
+              <Link to="/iade-iptal" className="block hover:text-white hover:translate-x-1 transition-all">{lang === 'tr' ? 'İade & İptal' : 'Returns'}</Link>
+              <Link to="/teslimat" className="block hover:text-white hover:translate-x-1 transition-all">{lang === 'tr' ? 'Teslimat' : 'Shipping'}</Link>
             </div>
           </div>
 
@@ -147,8 +149,6 @@ export default function Footer() {
             <Link to="/teslimat" className="hover:text-gray-400 transition-colors">
               {lang === 'tr' ? 'Teslimat' : 'Shipping'}
             </Link>
-            <span>·</span>
-            <span className="text-gray-700">laveskimya.com</span>
           </div>
         </div>
       </div>
