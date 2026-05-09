@@ -7,7 +7,6 @@ from ..core.deps import get_current_admin
 from ..core.config import settings
 from ..models.product import Product
 from ..models.product_image import ProductImage
-from ..models.category import Category
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
@@ -16,6 +15,15 @@ def product_to_dict(p: Product) -> dict:
     all_images = [img.image for img in imgs]
     image_ids = [img.id for img in imgs]
     main_image = all_images[0] if all_images else p.image
+
+    # İndirim hesapla
+    effective_discount = None
+    if p.price and p.price > 0:
+        if p.price_discounted and p.price_discounted < p.price:
+            effective_discount = round((1 - p.price_discounted / p.price) * 100)
+        elif p.discount_percent and p.discount_percent > 0:
+            effective_discount = p.discount_percent
+
     return {
         "id": p.id,
         "name_tr": p.name_tr,
@@ -30,6 +38,14 @@ def product_to_dict(p: Product) -> dict:
         "category_id": p.category_id,
         "is_active": p.is_active,
         "order": p.order,
+        "price": p.price,
+        "price_discounted": p.price_discounted,
+        "discount_percent": effective_discount,
+        "price_unit": p.price_unit or "adet",
+        "min_order_qty": p.min_order_qty or 1,
+        "show_price": p.show_price if p.show_price is not None else True,
+        "price_note_tr": p.price_note_tr or "",
+        "price_note_en": p.price_note_en or "",
         "category": {"id": p.category.id, "name_tr": p.category.name_tr, "name_en": p.category.name_en} if p.category else None
     }
 
@@ -41,6 +57,20 @@ def save_image(image: UploadFile) -> str:
     with open(filepath, "wb") as f:
         shutil.copyfileobj(image.file, f)
     return f"/uploads/{filename}"
+
+def parse_float(val) -> Optional[float]:
+    try:
+        v = float(val)
+        return v if v > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+def parse_int(val) -> Optional[int]:
+    try:
+        v = int(val)
+        return v if v > 0 else None
+    except (TypeError, ValueError):
+        return None
 
 @router.get("")
 def list_products(category_id: Optional[int] = None, active_only: bool = False, db: Session = Depends(get_db)):
@@ -69,6 +99,14 @@ def create_product(
     category_id: Optional[int] = Form(None),
     is_active: bool = Form(True),
     order: int = Form(0),
+    price: Optional[str] = Form(None),
+    price_discounted: Optional[str] = Form(None),
+    discount_percent: Optional[str] = Form(None),
+    price_unit: str = Form("adet"),
+    min_order_qty: Optional[str] = Form(None),
+    show_price: bool = Form(True),
+    price_note_tr: str = Form(""),
+    price_note_en: str = Form(""),
     images: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
     _=Depends(get_current_admin)
@@ -77,18 +115,24 @@ def create_product(
         name_tr=name_tr, name_en=name_en,
         description_tr=description_tr, description_en=description_en,
         details_tr=details_tr, details_en=details_en,
-        category_id=category_id, is_active=is_active, order=order
+        category_id=category_id, is_active=is_active, order=order,
+        price=parse_float(price),
+        price_discounted=parse_float(price_discounted),
+        discount_percent=parse_int(discount_percent),
+        price_unit=price_unit,
+        min_order_qty=parse_int(min_order_qty) or 1,
+        show_price=show_price,
+        price_note_tr=price_note_tr,
+        price_note_en=price_note_en,
     )
     db.add(p)
     db.flush()
-
     for i, img in enumerate(images):
         if img and img.filename:
             path = save_image(img)
             db.add(ProductImage(product_id=p.id, image=path, order=i))
             if i == 0:
-                p.image = path  # Ana görsel
-
+                p.image = path
     db.commit()
     db.refresh(p)
     return product_to_dict(p)
@@ -105,6 +149,14 @@ def update_product(
     category_id: Optional[int] = Form(None),
     is_active: bool = Form(True),
     order: int = Form(0),
+    price: Optional[str] = Form(None),
+    price_discounted: Optional[str] = Form(None),
+    discount_percent: Optional[str] = Form(None),
+    price_unit: str = Form("adet"),
+    min_order_qty: Optional[str] = Form(None),
+    show_price: bool = Form(True),
+    price_note_tr: str = Form(""),
+    price_note_en: str = Form(""),
     images: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
     _=Depends(get_current_admin)
@@ -122,8 +174,15 @@ def update_product(
     p.category_id = category_id
     p.is_active = is_active
     p.order = order
+    p.price = parse_float(price)
+    p.price_discounted = parse_float(price_discounted)
+    p.discount_percent = parse_int(discount_percent)
+    p.price_unit = price_unit
+    p.min_order_qty = parse_int(min_order_qty) or 1
+    p.show_price = show_price
+    p.price_note_tr = price_note_tr
+    p.price_note_en = price_note_en
 
-    # Yeni görseller eklendiyse ekle (mevcut görselleri silme)
     existing_count = len(p.images)
     for i, img in enumerate(images):
         if img and img.filename:
@@ -153,7 +212,6 @@ def set_primary_image(id: int, image_id: int, db: Session = Depends(get_db), _=D
     img = db.query(ProductImage).filter(ProductImage.id == image_id, ProductImage.product_id == id).first()
     if not img:
         raise HTTPException(404, "Not found")
-    # Sıralamayı güncelle - bu görseli 0 yap, diğerlerini kaydır
     all_imgs = db.query(ProductImage).filter(ProductImage.product_id == id).order_by(ProductImage.order).all()
     for i, im in enumerate(all_imgs):
         im.order = 0 if im.id == image_id else (i + 1)

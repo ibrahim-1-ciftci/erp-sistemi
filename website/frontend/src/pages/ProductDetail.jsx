@@ -145,6 +145,47 @@ export default function ProductDetail() {
               <p className="text-gray-600 leading-relaxed text-base mb-6 border-l-4 border-blue-100 pl-4">{summary}</p>
             )}
 
+            {/* Fiyat gösterimi */}
+            {product.show_price && product.price && product.price > 0 && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
+                <div className="flex items-end gap-3">
+                  {product.price_discounted && product.price_discounted < product.price ? (
+                    <>
+                      <span className="text-3xl font-black text-blue-600">
+                        {product.price_discounted.toLocaleString('tr-TR')} ₺
+                      </span>
+                      <span className="text-lg text-gray-400 line-through">
+                        {product.price.toLocaleString('tr-TR')} ₺
+                      </span>
+                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
+                        %{product.discount_percent} İNDİRİM
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-3xl font-black text-blue-600">
+                      {product.price.toLocaleString('tr-TR')} ₺
+                    </span>
+                  )}
+                  <span className="text-sm text-gray-400 mb-1">/ {product.price_unit || 'adet'}</span>
+                </div>
+                {product.min_order_qty > 1 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {lang === 'tr' ? `Min. sipariş: ${product.min_order_qty} ${product.price_unit}` : `Min. order: ${product.min_order_qty} ${product.price_unit}`}
+                  </p>
+                )}
+                {(lang === 'tr' ? product.price_note_tr : product.price_note_en) && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {lang === 'tr' ? product.price_note_tr : product.price_note_en}
+                  </p>
+                )}
+              </div>
+            )}
+            {product.show_price === false && (
+              <div className="mb-6 p-3 bg-blue-50 rounded-xl text-sm text-blue-700">
+                {lang === 'tr' ? 'Fiyat bilgisi için bizimle iletişime geçin.' : 'Contact us for pricing information.'}
+              </div>
+            )}
+
             {/* Özellik rozetleri */}
             <div className="flex flex-wrap gap-2 mb-6">
               {[

@@ -77,6 +77,14 @@ export default function ProductCard({ product }) {
             </span>
           </div>
         )}
+        {/* İndirim rozeti */}
+        {product.price_discounted && product.price && product.price_discounted < product.price && (
+          <div className="absolute top-3 right-3">
+            <span className="text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-lg">
+              %{product.discount_percent || Math.round((1 - product.price_discounted / product.price) * 100)} İND.
+            </span>
+          </div>
+        )}
 
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
@@ -103,6 +111,19 @@ export default function ProductCard({ product }) {
       <div className="p-5">
         <h3 className="font-bold text-gray-900 text-base mb-1 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2">{name}</h3>
         {desc && <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{desc}</p>}
+        {product.show_price && product.price > 0 && (
+          <div className="flex items-center gap-2 mt-2">
+            {product.price_discounted && product.price_discounted < product.price ? (
+              <>
+                <span className="text-sm font-bold text-blue-600">{product.price_discounted.toLocaleString('tr-TR')} ₺</span>
+                <span className="text-xs text-gray-400 line-through">{product.price.toLocaleString('tr-TR')} ₺</span>
+              </>
+            ) : (
+              <span className="text-sm font-bold text-blue-600">{product.price.toLocaleString('tr-TR')} ₺</span>
+            )}
+            <span className="text-xs text-gray-400">/ {product.price_unit || 'adet'}</span>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -8,7 +8,10 @@ const EMPTY = {
   name_tr: '', name_en: '',
   description_tr: '', description_en: '',
   details_tr: '', details_en: '',
-  category_id: '', is_active: true, order: 0
+  category_id: '', is_active: true, order: 0,
+  price: '', price_discounted: '', discount_percent: '',
+  price_unit: 'adet', min_order_qty: '1',
+  show_price: true, price_note_tr: '', price_note_en: '',
 }
 
 export default function AdminProductForm() {
@@ -37,7 +40,14 @@ export default function AdminProductForm() {
           name_tr: p.name_tr, name_en: p.name_en,
           description_tr: p.description_tr || '', description_en: p.description_en || '',
           details_tr: p.details_tr || '', details_en: p.details_en || '',
-          category_id: p.category_id || '', is_active: p.is_active, order: p.order
+          category_id: p.category_id || '', is_active: p.is_active, order: p.order,
+          price: p.price || '', price_discounted: p.price_discounted || '',
+          discount_percent: p.discount_percent || '',
+          price_unit: p.price_unit || 'adet',
+          min_order_qty: p.min_order_qty || '1',
+          show_price: p.show_price !== false,
+          price_note_tr: p.price_note_tr || '',
+          price_note_en: p.price_note_en || '',
         })
         setExistingImages((p.images || []).map((img, i) => ({
           id: (p.image_ids || [])[i] ?? null,
@@ -329,6 +339,73 @@ export default function AdminProductForm() {
                 <button type="button" onClick={() => f('is_active', !form.is_active)}
                   className={`relative w-11 h-6 rounded-full transition-colors ${form.is_active ? 'bg-blue-600' : 'bg-gray-200'}`}>
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Fiyat Ayarları */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+              <h3 className="font-semibold text-gray-900">Fiyat Ayarları</h3>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Normal Fiyat (₺)</label>
+                  <input type="number" step="0.01" min="0" value={form.price}
+                    onChange={e => f('price', e.target.value)}
+                    placeholder="0.00"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">İndirimli Fiyat (₺)</label>
+                  <input type="number" step="0.01" min="0" value={form.price_discounted}
+                    onChange={e => f('price_discounted', e.target.value)}
+                    placeholder="0.00"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+
+              {/* İndirim önizleme */}
+              {form.price && form.price_discounted && parseFloat(form.price_discounted) < parseFloat(form.price) && (
+                <div className="bg-green-50 rounded-xl px-3 py-2 text-xs text-green-700 font-medium">
+                  %{Math.round((1 - parseFloat(form.price_discounted) / parseFloat(form.price)) * 100)} indirim
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Birim</label>
+                  <select value={form.price_unit} onChange={e => f('price_unit', e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="adet">Adet</option>
+                    <option value="kg">Kg</option>
+                    <option value="lt">Litre</option>
+                    <option value="paket">Paket</option>
+                    <option value="koli">Koli</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Min. Sipariş</label>
+                  <input type="number" min="1" value={form.min_order_qty}
+                    onChange={e => f('min_order_qty', e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Fiyat Notu (TR)</label>
+                <input value={form.price_note_tr} onChange={e => f('price_note_tr', e.target.value)}
+                  placeholder="KDV dahil, Toplu fiyat için arayın..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-t border-gray-100">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Fiyatı Göster</p>
+                  <p className="text-xs text-gray-400">Sitede fiyat görünsün mü?</p>
+                </div>
+                <button type="button" onClick={() => f('show_price', !form.show_price)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${form.show_price ? 'bg-blue-600' : 'bg-gray-200'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.show_price ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
             </div>
