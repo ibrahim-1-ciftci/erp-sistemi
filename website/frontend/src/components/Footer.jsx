@@ -131,58 +131,58 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/5 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-gray-600">
-          <span>© {year} Laves Kimya. {t('footer.rights')}</span>
-          <div className="flex items-center gap-4 flex-wrap justify-center">
-            <Link to="/gizlilik-politikasi" className="hover:text-gray-400 transition-colors">
-              {lang === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}
-            </Link>
-            <span>·</span>
-            <Link to="/mesafeli-satis-sozlesmesi" className="hover:text-gray-400 transition-colors">
-              {lang === 'tr' ? 'Satış Sözleşmesi' : 'Sales Agreement'}
-            </Link>
-            <span>·</span>
-            <Link to="/iade-iptal" className="hover:text-gray-400 transition-colors">
-              {lang === 'tr' ? 'İade & İptal' : 'Returns'}
-            </Link>
-            <span>·</span>
-            <Link to="/teslimat" className="hover:text-gray-400 transition-colors">
-              {lang === 'tr' ? 'Teslimat' : 'Shipping'}
-            </Link>
+        {/* Alt bar: telif + yasal linkler + ödeme logoları */}
+        <div className="border-t border-white/5 pt-5 space-y-4">
+          {/* Telif + yasal */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
+            <span>© {year} Laves Kimya. {t('footer.rights')}</span>
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <Link to="/gizlilik-politikasi" className="hover:text-gray-400 transition-colors">
+                {lang === 'tr' ? 'Gizlilik' : 'Privacy'}
+              </Link>
+              <span>·</span>
+              <Link to="/mesafeli-satis-sozlesmesi" className="hover:text-gray-400 transition-colors">
+                {lang === 'tr' ? 'Satış Sözleşmesi' : 'Sales Agreement'}
+              </Link>
+              <span>·</span>
+              <Link to="/iade-iptal" className="hover:text-gray-400 transition-colors">
+                {lang === 'tr' ? 'İade & İptal' : 'Returns'}
+              </Link>
+              <span>·</span>
+              <Link to="/teslimat" className="hover:text-gray-400 transition-colors">
+                {lang === 'tr' ? 'Teslimat' : 'Shipping'}
+              </Link>
+            </div>
           </div>
-        </div>
 
-        {/* Ödeme logoları */}
-        <div className="mt-6 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-600">{lang === 'tr' ? 'Güvenli ödeme yöntemleri' : 'Secure payment methods'}</p>
-          <div className="flex items-center gap-3">
-            {/* Visa */}
-            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8">
-              <svg viewBox="0 0 60 20" width="48" height="16" xmlns="http://www.w3.org/2000/svg">
-                <text x="0" y="16" fontFamily="Arial" fontWeight="bold" fontSize="16" fill="#1A1F71">VISA</text>
-              </svg>
-            </div>
-            {/* Mastercard */}
-            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8">
-              <svg viewBox="0 0 38 24" width="38" height="24" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="13" cy="12" r="10" fill="#EB001B"/>
-                <circle cx="25" cy="12" r="10" fill="#F79E1B"/>
-                <path d="M19 5.5a10 10 0 0 1 0 13A10 10 0 0 1 19 5.5z" fill="#FF5F00"/>
-              </svg>
-            </div>
-            {/* Troy */}
-            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8">
-              <svg viewBox="0 0 60 20" width="48" height="16" xmlns="http://www.w3.org/2000/svg">
-                <text x="0" y="15" fontFamily="Arial" fontWeight="bold" fontSize="14" fill="#003087">troy</text>
-              </svg>
-            </div>
-            {/* 3D Secure */}
-            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8 gap-1">
-              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 1L2 4v4c0 3.3 2.5 6.4 6 7 3.5-.6 6-3.7 6-7V4L8 1z" fill="#003087" stroke="#003087" strokeWidth="0.5"/>
-                <path d="M6 8l1.5 1.5L10.5 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="text-xs font-bold text-gray-700">3D</span>
+          {/* Ödeme logoları — tam genişlik, ortada */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-white/5">
+            <p className="text-xs text-gray-600">{lang === 'tr' ? 'Güvenli ödeme yöntemleri' : 'Secure payment methods'}</p>
+            <div className="flex items-center gap-2">
+              <div className="bg-white rounded px-2.5 py-1 flex items-center justify-center h-7">
+                <svg viewBox="0 0 60 20" width="44" height="14" xmlns="http://www.w3.org/2000/svg">
+                  <text x="0" y="15" fontFamily="Arial" fontWeight="bold" fontSize="15" fill="#1A1F71">VISA</text>
+                </svg>
+              </div>
+              <div className="bg-white rounded px-1.5 py-1 flex items-center justify-center h-7">
+                <svg viewBox="0 0 38 24" width="34" height="22" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="13" cy="12" r="10" fill="#EB001B"/>
+                  <circle cx="25" cy="12" r="10" fill="#F79E1B"/>
+                  <path d="M19 5.5a10 10 0 0 1 0 13A10 10 0 0 1 19 5.5z" fill="#FF5F00"/>
+                </svg>
+              </div>
+              <div className="bg-white rounded px-2.5 py-1 flex items-center justify-center h-7">
+                <svg viewBox="0 0 50 18" width="40" height="14" xmlns="http://www.w3.org/2000/svg">
+                  <text x="0" y="14" fontFamily="Arial" fontWeight="bold" fontSize="13" fill="#003087">troy</text>
+                </svg>
+              </div>
+              <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-7 gap-1">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 1L2 4v4c0 3.3 2.5 6.4 6 7 3.5-.6 6-3.7 6-7V4L8 1z" fill="#003087"/>
+                  <path d="M6 8l1.5 1.5L10.5 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs font-bold text-gray-700">3D</span>
+              </div>
             </div>
           </div>
         </div>
