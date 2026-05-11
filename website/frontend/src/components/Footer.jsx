@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Phone, Mail, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
+import { Phone, Mail, MapPin } from 'lucide-react'
 import api from '../api/axios'
 
 export default function Footer() {
@@ -21,34 +21,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-gray-950 text-gray-400">
-      {/* CTA band */}
-      <div className="border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="text-white font-bold text-lg">
-              {lang === 'tr' ? 'Toplu sipariş veya fiyat teklifi mi istiyorsunuz?' : 'Looking for bulk orders or a price quote?'}
-            </p>
-            <p className="text-gray-500 text-sm mt-0.5">
-              {lang === 'tr' ? 'Hemen iletişime geçin, size özel fiyat sunalım.' : 'Contact us now for a custom price offer.'}
-            </p>
-          </div>
-          <div className="flex gap-3 flex-shrink-0">
-            {whatsappNum && (
-              <a href={`https://wa.me/${whatsappNum}?text=${encodeURIComponent(waMsg)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-                <MessageCircle size={16} /> WhatsApp
-              </a>
-            )}
-            <Link to="/iletisim"
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              {lang === 'tr' ? 'İletişim' : 'Contact'} <ArrowUpRight size={14} />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
 
           {/* Brand */}
@@ -133,8 +106,8 @@ export default function Footer() {
 
         {/* Alt bar: telif + yasal linkler + ödeme logoları */}
         <div className="border-t border-white/5 pt-5 space-y-4">
-          {/* Telif + yasal */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
+          {/* Telif + yasal + ödeme tek satırda */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-3 text-xs text-gray-600">
             <span>© {year} Laves Kimya. {t('footer.rights')}</span>
             <div className="flex items-center gap-3 flex-wrap justify-center">
               <Link to="/gizlilik-politikasi" className="hover:text-gray-400 transition-colors">
@@ -153,11 +126,7 @@ export default function Footer() {
                 {lang === 'tr' ? 'Teslimat' : 'Shipping'}
               </Link>
             </div>
-          </div>
-
-          {/* Ödeme logoları — tam genişlik, ortada */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-white/5">
-            <p className="text-xs text-gray-600">{lang === 'tr' ? 'Güvenli ödeme yöntemleri' : 'Secure payment methods'}</p>
+            {/* Ödeme logoları */}
             <div className="flex items-center gap-2">
               <div className="bg-white rounded px-2.5 py-1 flex items-center justify-center h-7">
                 <svg viewBox="0 0 60 20" width="44" height="14" xmlns="http://www.w3.org/2000/svg">

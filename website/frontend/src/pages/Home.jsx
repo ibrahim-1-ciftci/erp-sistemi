@@ -186,28 +186,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── CTA ── */}
-      <section className="relative py-24 bg-gray-950 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
-        </div>
-        <div className="relative max-w-2xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-            {lang === 'tr' ? 'Bizimle İletişime Geçin' : 'Get in Touch With Us'}
-          </h2>
-          <p className="text-gray-400 mb-8">
-            {lang === 'tr'
-              ? 'Ürünlerimiz ve fiyatlarımız hakkında bilgi almak için bize ulaşın.'
-              : 'Contact us for information about our products and pricing.'}
-          </p>
-          <Link to="/iletisim"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-2xl transition-all hover:scale-105 hover:shadow-xl hover:shadow-blue-500/30">
-            {t('hero.contact')} <ArrowRight size={16} />
-          </Link>
-        </div>
-      </section>
-
     </div>
   )
 }
