@@ -151,6 +151,41 @@ export default function Footer() {
             </Link>
           </div>
         </div>
+
+        {/* Ödeme logoları */}
+        <div className="mt-6 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-600">{lang === 'tr' ? 'Güvenli ödeme yöntemleri' : 'Secure payment methods'}</p>
+          <div className="flex items-center gap-3">
+            {/* Visa */}
+            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8">
+              <svg viewBox="0 0 60 20" width="48" height="16" xmlns="http://www.w3.org/2000/svg">
+                <text x="0" y="16" fontFamily="Arial" fontWeight="bold" fontSize="16" fill="#1A1F71">VISA</text>
+              </svg>
+            </div>
+            {/* Mastercard */}
+            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8">
+              <svg viewBox="0 0 38 24" width="38" height="24" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="13" cy="12" r="10" fill="#EB001B"/>
+                <circle cx="25" cy="12" r="10" fill="#F79E1B"/>
+                <path d="M19 5.5a10 10 0 0 1 0 13A10 10 0 0 1 19 5.5z" fill="#FF5F00"/>
+              </svg>
+            </div>
+            {/* Troy */}
+            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8">
+              <svg viewBox="0 0 60 20" width="48" height="16" xmlns="http://www.w3.org/2000/svg">
+                <text x="0" y="15" fontFamily="Arial" fontWeight="bold" fontSize="14" fill="#003087">troy</text>
+              </svg>
+            </div>
+            {/* 3D Secure */}
+            <div className="bg-white rounded-md px-2 py-1 flex items-center justify-center h-8 gap-1">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 1L2 4v4c0 3.3 2.5 6.4 6 7 3.5-.6 6-3.7 6-7V4L8 1z" fill="#003087" stroke="#003087" strokeWidth="0.5"/>
+                <path d="M6 8l1.5 1.5L10.5 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-xs font-bold text-gray-700">3D</span>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   )
