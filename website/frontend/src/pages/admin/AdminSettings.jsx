@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Building2, Phone, Info, Home, FileText, Save } from 'lucide-react'
+import { Building2, Phone, Info, Home, FileText, Save, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
@@ -51,6 +51,20 @@ const SECTIONS = [
       { key: 'about_stat2_label_tr', label: 'İstatistik 2 - Etiket (TR)', placeholder: 'Kalite Kontrol' },
       { key: 'about_stat3_val', label: 'İstatistik 3 - Değer', placeholder: 'B2B' },
       { key: 'about_stat3_label_tr', label: 'İstatistik 3 - Etiket (TR)', placeholder: 'Kurumsal Satış' },
+    ]
+  },
+  {
+    id: 'payment',
+    label: 'Ödeme Bilgileri',
+    icon: CreditCard,
+    fields: [
+      { key: 'payment_name', label: 'Hesap Sahibi Adı Soyadı', placeholder: 'Laves Kimya Ltd. Şti.' },
+      { key: 'payment_bank', label: 'Banka Adı', placeholder: 'Ziraat Bankası' },
+      { key: 'payment_iban', label: 'IBAN', placeholder: 'TR00 0000 0000 0000 0000 0000 00' },
+      { key: 'payment_branch', label: 'Şube Adı / Kodu', placeholder: 'Merkez Şubesi / 0001' },
+      { key: 'payment_account_no', label: 'Hesap Numarası', placeholder: '1234567' },
+      { key: 'payment_note_tr', label: 'Ödeme Notu (TR)', multiline: true, rows: 3, placeholder: 'Havale/EFT sonrası sipariş numaranızı belirtiniz.' },
+      { key: 'payment_note_en', label: 'Ödeme Notu (EN)', multiline: true, rows: 3, placeholder: 'Please include your order number after transfer.' },
     ]
   },
   {
