@@ -142,7 +142,7 @@ export default function ProductDetail() {
             <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">{name}</h1>
 
             {summary && (
-              <p className="text-gray-600 leading-relaxed text-base mb-6 border-l-4 border-blue-100 pl-4">{summary}</p>
+              <div className="text-gray-600 leading-relaxed text-base mb-6 border-l-4 border-blue-100 pl-4 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: summary }} />
             )}
 
             {/* Fiyat gösterimi */}
@@ -238,7 +238,7 @@ export default function ProductDetail() {
             <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">
               {lang === 'tr' ? 'Ürün Detayları' : 'Product Details'}
             </h2>
-            <div className="text-gray-600 leading-relaxed whitespace-pre-line prose-sm max-w-none">{details}</div>
+            <div className="text-gray-600 leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: details }} />
           </div>
         )}
 

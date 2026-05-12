@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Upload, X, Star, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api/axios'
+import RichEditor from '../../components/RichEditor'
 
 const EMPTY = {
   name_tr: '', name_en: '',
@@ -195,22 +196,22 @@ export default function AdminProductForm() {
                     Kısa Özet {activeTab === 'tr' ? '(TR)' : '(EN)'}
                     <span className="ml-1 text-gray-400 normal-case font-normal">— Ürün sayfasında fotoğrafın yanında</span>
                   </label>
-                  <textarea rows={3}
+                  <RichEditor
                     value={activeTab === 'tr' ? form.description_tr : form.description_en}
-                    onChange={e => f(activeTab === 'tr' ? 'description_tr' : 'description_en', e.target.value)}
+                    onChange={val => f(activeTab === 'tr' ? 'description_tr' : 'description_en', val)}
                     placeholder={activeTab === 'tr' ? 'Kısa ürün özeti...' : 'Short product summary...'}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                     Detaylı Açıklama {activeTab === 'tr' ? '(TR)' : '(EN)'}
                     <span className="ml-1 text-gray-400 normal-case font-normal">— Fotoğrafın altında</span>
                   </label>
-                  <textarea rows={8}
+                  <RichEditor
                     value={activeTab === 'tr' ? form.details_tr : form.details_en}
-                    onChange={e => f(activeTab === 'tr' ? 'details_tr' : 'details_en', e.target.value)}
+                    onChange={val => f(activeTab === 'tr' ? 'details_tr' : 'details_en', val)}
                     placeholder={activeTab === 'tr' ? 'Ürün özellikleri, kullanım alanları...' : 'Product features, usage areas...'}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                  />
                 </div>
               </div>
             </div>
