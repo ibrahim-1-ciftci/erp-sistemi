@@ -4,7 +4,8 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Link from '@tiptap/extension-link'
-import Placeholder from '@tiptap/extension-placeholder'import {
+import Placeholder from '@tiptap/extension-placeholder'
+import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight,
   Heading2, Heading3, Minus, Undo, Redo, Link as LinkIcon
