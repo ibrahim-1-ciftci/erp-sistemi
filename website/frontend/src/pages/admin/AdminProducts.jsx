@@ -113,6 +113,7 @@ export default function AdminProducts() {
               <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wider">Görsel</th>
               <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wider">Ürün Adı</th>
               <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Kategori</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Fiyat</th>
               <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wider">Durum</th>
               <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wider">İşlem</th>
             </tr>
@@ -124,13 +125,14 @@ export default function AdminProducts() {
                   <td className="px-4 py-3"><div className="w-10 h-10 bg-gray-100 rounded-lg animate-pulse" /></td>
                   <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded animate-pulse w-40" /></td>
                   <td className="px-4 py-3 hidden md:table-cell"><div className="h-4 bg-gray-100 rounded animate-pulse w-24" /></td>
+                  <td className="px-4 py-3 hidden md:table-cell"><div className="h-4 bg-gray-100 rounded animate-pulse w-20" /></td>
                   <td className="px-4 py-3"><div className="h-5 bg-gray-100 rounded-full animate-pulse w-14" /></td>
                   <td className="px-4 py-3" />
                 </tr>
               ))
             )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-12 text-gray-400">Ürün bulunamadı</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 text-gray-400">Ürün bulunamadı</td></tr>
             )}
             {!loading && filtered.map(p => (
               <tr key={p.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/products/${p.id}`)}>
@@ -145,6 +147,23 @@ export default function AdminProducts() {
                 </td>
                 <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
                   {p.category?.name_tr || <span className="text-gray-300">—</span>}
+                </td>
+                <td className="px-4 py-3 hidden md:table-cell">
+                  {p.show_price && p.price > 0 ? (
+                    <div>
+                      {p.price_discounted && p.price_discounted < p.price ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-blue-600">{p.price_discounted.toLocaleString('tr-TR')} ₺</span>
+                          <span className="text-xs text-gray-400 line-through">{p.price.toLocaleString('tr-TR')} ₺</span>
+                        </div>
+                      ) : (
+                        <span className="font-semibold text-blue-600">{p.price.toLocaleString('tr-TR')} ₺</span>
+                      )}
+                      <p className="text-xs text-gray-400">/ {p.price_unit || 'adet'}</p>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-300">Fiyat gizli</span>
+                  )}
                 </td>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                   <button onClick={() => toggleActive(p)}
