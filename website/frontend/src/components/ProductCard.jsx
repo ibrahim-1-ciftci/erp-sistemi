@@ -24,7 +24,9 @@ export default function ProductCard({ product }) {
   }
 
   const name = lang === 'tr' ? product.name_tr : product.name_en
-  const desc = lang === 'tr' ? product.description_tr : product.description_en
+  const rawDesc = lang === 'tr' ? product.description_tr : product.description_en
+  // HTML tag'lerini temizle, sadece düz metin göster
+  const desc = rawDesc ? rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : ''
   const catName = product.category ? (lang === 'tr' ? product.category.name_tr : product.category.name_en) : ''
 
   return (
