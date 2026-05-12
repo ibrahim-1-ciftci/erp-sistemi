@@ -13,6 +13,7 @@ export default function Checkout() {
   const navigate = useNavigate()
   const [items, setItems] = useState(cartStore.getItems())
   const [loading, setLoading] = useState(false)
+  const [settings, setSettings] = useState({})
   const [paymentMethod, setPaymentMethod] = useState('transfer') // transfer | card
   const [form, setForm] = useState({
     name: '', email: '', phone: '', address: '', city: '', note: ''
@@ -22,6 +23,7 @@ export default function Checkout() {
 
   useEffect(() => {
     if (items.length === 0) navigate('/sepet')
+    api.get('/settings').then(r => setSettings(r.data)).catch(() => {})
   }, [])
 
   const f = (k, v) => setForm(prev => ({ ...prev, [k]: v }))
@@ -152,15 +154,20 @@ export default function Checkout() {
 
                 {paymentMethod === 'transfer' && (
                   <div className="mt-4 bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
-                    <p className="font-semibold mb-1">{lang === 'tr' ? 'Havale Bilgileri' : 'Bank Transfer Details'}</p>
-                    <p>{lang === 'tr' ? 'Banka: ' : 'Bank: '}<strong>Şekerbank</strong></p>
-                    <p>IBAN: <strong>TR00 0000 0000 0000 0000 0000 00</strong></p>
-                    <p>{lang === 'tr' ? 'Hesap Sahibi: ' : 'Account Holder: '}<strong>Laves Kimya</strong></p>
-                    <p className="text-xs text-blue-600 mt-2">
-                      {lang === 'tr'
-                        ? '* Havale açıklamasına adınızı ve sipariş numaranızı yazınız.'
-                        : '* Please write your name and order number in the transfer description.'}
-                    </p>
+                    <p className="font-semibold mb-2">{lang === 'tr' ? 'Havale Bilgileri' : 'Bank Transfer Details'}</p>
+                    {settings.payment_name && <p>{lang === 'tr' ? 'Hesap Sahibi: ' : 'Account Holder: '}<strong>{settings.payment_name}</strong></p>}
+                    {settings.payment_bank && <p>{lang === 'tr' ? 'Banka: ' : 'Bank: '}<strong>{settings.payment_bank}</strong></p>}
+                    {settings.payment_branch && <p>{lang === 'tr' ? 'Şube: ' : 'Branch: '}<strong>{settings.payment_branch}</strong></p>}
+                    {settings.payment_account_no && <p>{lang === 'tr' ? 'Hesap No: ' : 'Account No: '}<strong>{settings.payment_account_no}</strong></p>}
+                    {settings.payment_iban && <p>IBAN: <strong>{settings.payment_iban}</strong></p>}
+                    {(settings.payment_note_tr || settings.payment_note_en) && (
+                      <p className="text-xs text-blue-600 mt-2">
+                        * {lang === 'tr' ? (settings.payment_note_tr || '') : (settings.payment_note_en || '')}
+                      </p>
+                    )}
+                    {!settings.payment_iban && !settings.payment_bank && (
+                      <p className="text-blue-600 text-xs">Ödeme bilgileri admin panelinden ayarlanabilir.</p>
+                    )}
                   </div>
                 )}
 
