@@ -1,45 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Package, MessageCircle, ArrowRight } from 'lucide-react'
-import api from '../api/axios'
-
-// Şirket WhatsApp numarasını bir kez çek, tüm kartlar paylaşsın
-let cachedWhatsapp = null
-let fetchPromise = null
-function getWhatsapp() {
-  if (cachedWhatsapp !== null) return Promise.resolve(cachedWhatsapp)
-  if (!fetchPromise) {
-    fetchPromise = api.get('/settings')
-      .then(r => { cachedWhatsapp = r.data.whatsapp?.replace(/\D/g, '') || ''; return cachedWhatsapp })
-      .catch(() => { cachedWhatsapp = ''; return '' })
-  }
-  return fetchPromise
-}
+import { Package, ShoppingCart, ArrowRight, Check } from 'lucide-react'
+import { cartStore } from '../store/cartStore'
 
 export default function ProductCard({ product }) {
   const { i18n, t } = useTranslation()
   const navigate = useNavigate()
   const lang = i18n.language
   const [imgLoaded, setImgLoaded] = useState(false)
-  const [whatsapp, setWhatsapp] = useState(cachedWhatsapp || '')
+  const [added, setAdded] = useState(false)
   const imgRef = useRef(null)
 
   useEffect(() => {
     if (imgRef.current?.complete) setImgLoaded(true)
-    if (!whatsapp) getWhatsapp().then(setWhatsapp)
   }, [])
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation()
+    cartStore.addItem(product)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
+  }
 
   const name = lang === 'tr' ? product.name_tr : product.name_en
   const desc = lang === 'tr' ? product.description_tr : product.description_en
   const catName = product.category ? (lang === 'tr' ? product.category.name_tr : product.category.name_en) : ''
-
-  const waMsg = lang === 'tr'
-    ? `Merhaba, "${name}" ürünü hakkında bilgi ve fiyat almak istiyorum.`
-    : `Hello, I would like to get information and pricing for "${name}".`
-  const whatsappUrl = whatsapp
-    ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(waMsg)}`
-    : `https://wa.me/?text=${encodeURIComponent(waMsg)}`
 
   return (
     <div
@@ -89,15 +75,12 @@ export default function ProductCard({ product }) {
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
           <div className="flex gap-2 translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded-xl transition-colors">
-              <MessageCircle size={13} />
-              {lang === 'tr' ? 'Teklif Al' : 'Get Quote'}
-            </a>
+            <button
+              onClick={handleAddToCart}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-white text-xs font-bold py-2 px-3 rounded-xl transition-colors ${added ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700'}`}>
+              {added ? <Check size={13} /> : <ShoppingCart size={13} />}
+              {added ? (lang === 'tr' ? 'Eklendi' : 'Added') : (lang === 'tr' ? 'Sepete Ekle' : 'Add to Cart')}
+            </button>
             <button
               onClick={e => { e.stopPropagation(); navigate(`/urun/${product.id}`) }}
               className="flex items-center justify-center gap-1 bg-white/90 hover:bg-white text-gray-900 text-xs font-bold py-2 px-3 rounded-xl transition-colors">
