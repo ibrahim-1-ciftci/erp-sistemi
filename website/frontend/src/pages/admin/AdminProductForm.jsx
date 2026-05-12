@@ -197,6 +197,7 @@ export default function AdminProductForm() {
                     <span className="ml-1 text-gray-400 normal-case font-normal">— Ürün sayfasında fotoğrafın yanında</span>
                   </label>
                   <RichEditor
+                    key={`desc-${activeTab}`}
                     value={activeTab === 'tr' ? form.description_tr : form.description_en}
                     onChange={val => f(activeTab === 'tr' ? 'description_tr' : 'description_en', val)}
                     placeholder={activeTab === 'tr' ? 'Kısa ürün özeti...' : 'Short product summary...'}
@@ -208,6 +209,7 @@ export default function AdminProductForm() {
                     <span className="ml-1 text-gray-400 normal-case font-normal">— Fotoğrafın altında</span>
                   </label>
                   <RichEditor
+                    key={`details-${activeTab}`}
                     value={activeTab === 'tr' ? form.details_tr : form.details_en}
                     onChange={val => f(activeTab === 'tr' ? 'details_tr' : 'details_en', val)}
                     placeholder={activeTab === 'tr' ? 'Ürün özellikleri, kullanım alanları...' : 'Product features, usage areas...'}
