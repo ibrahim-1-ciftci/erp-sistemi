@@ -41,6 +41,10 @@ class PasswordChange(BaseModel):
     current_password: str
     new_password: str
 
+class UsernameChange(BaseModel):
+    new_username: str
+    current_password: str
+
 @router.get("")
 def get_all_settings(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     from app.core.deps import get_role_permissions
@@ -78,6 +82,19 @@ def change_password(data: PasswordChange, db: Session = Depends(get_db), current
     current_user.hashed_password = get_password_hash(data.new_password)
     db.commit()
     return {"message": "Şifre değiştirildi"}
+
+@router.post("/change-username")
+def change_username(data: UsernameChange, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Mevcut şifre hatalı")
+    new_username = data.new_username.strip()
+    if len(new_username) < 3:
+        raise HTTPException(status_code=400, detail="Kullanıcı adı en az 3 karakter olmalı")
+    if db.query(User).filter(User.username == new_username, User.id != current_user.id).first():
+        raise HTTPException(status_code=400, detail="Bu kullanıcı adı zaten kullanımda")
+    current_user.username = new_username
+    db.commit()
+    return {"message": "Kullanıcı adı değiştirildi", "username": new_username}
 
 
 # ── Kullanıcı Yönetimi (sadece admin) ──────────────────────────────────────
