@@ -44,7 +44,7 @@ export default function BlogDetail() {
 
         {content ? (
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-            <div className="text-gray-700 leading-relaxed whitespace-pre-line">{content}</div>
+            <div className="rich-content text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: content }} />
           </div>
         ) : (
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-gray-400 text-center">
