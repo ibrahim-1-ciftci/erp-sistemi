@@ -4,8 +4,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Link from '@tiptap/extension-link'
-import Placeholder from '@tiptap/extension-placeholder'
-import {
+import Placeholder from '@tiptap/extension-placeholder'import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight,
   Heading2, Heading3, Minus, Undo, Redo, Link as LinkIcon
@@ -30,10 +29,7 @@ function ToolbarBtn({ onClick, active, title, children }) {
 export default function RichEditor({ value, onChange, placeholder = 'İçerik yazın...' }) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        bulletList: { keepMarks: true },
-        orderedList: { keepMarks: true },
-      }),
+      StarterKit,
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Link.configure({ openOnClick: false }),
