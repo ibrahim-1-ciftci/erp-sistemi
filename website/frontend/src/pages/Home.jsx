@@ -159,6 +159,77 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── FASON ÜRETİM ── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Sol: Metin */}
+            <div>
+              <p className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-3">
+                {lang === 'tr' ? 'Fason Üretim' : 'Contract Manufacturing'}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-5 leading-tight">
+                {lang === 'tr' ? (
+                  <>Kendi Markanızla<br /><span className="text-blue-600">Üretim Yapıyoruz</span></>
+                ) : (
+                  <>We Produce<br /><span className="text-blue-600">Under Your Brand</span></>
+                )}
+              </h2>
+              <p className="text-gray-500 leading-relaxed mb-8">
+                {lang === 'tr'
+                  ? 'Laves Kimya olarak kendi ürün formüllerimizin yanı sıra müşterilerimize özel fason üretim hizmeti sunuyoruz. Markanıza özel etiket, ambalaj ve formülasyon ile profesyonel kimya ürünleri üretiyoruz.'
+                  : 'In addition to our own product formulas, Laves Chemistry offers contract manufacturing services tailored to our customers. We produce professional chemical products with custom labels, packaging, and formulations for your brand.'}
+              </p>
+              <div className="space-y-3 mb-8">
+                {(lang === 'tr' ? [
+                  'Özel formülasyon geliştirme',
+                  'Markanıza özel etiket ve ambalaj',
+                  'Minimum sipariş esnekliği',
+                  'Kalite kontrol ve sertifikasyon desteği',
+                ] : [
+                  'Custom formula development',
+                  'Private label and packaging',
+                  'Flexible minimum order quantities',
+                  'Quality control and certification support',
+                ]).map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <span className="text-gray-700 text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <Link to="/iletisim"
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3.5 rounded-2xl transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 text-sm">
+                {lang === 'tr' ? 'Teklif Alın' : 'Get a Quote'} <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            {/* Sağ: Kart grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {(lang === 'tr' ? [
+                { emoji: '🧪', title: 'Formülasyon', desc: 'Uzman kimyagerlerimizle özel formül geliştirme' },
+                { emoji: '🏷️', title: 'Özel Etiket', desc: 'Markanıza özel tasarım ve baskı' },
+                { emoji: '📦', title: 'Ambalaj', desc: 'Farklı hacim ve ambalaj seçenekleri' },
+                { emoji: '✅', title: 'Kalite', desc: 'Her üretim partisi kalite kontrolünden geçer' },
+              ] : [
+                { emoji: '🧪', title: 'Formulation', desc: 'Custom formula development with expert chemists' },
+                { emoji: '🏷️', title: 'Private Label', desc: 'Custom design and printing for your brand' },
+                { emoji: '📦', title: 'Packaging', desc: 'Various volume and packaging options' },
+                { emoji: '✅', title: 'Quality', desc: 'Every production batch passes quality control' },
+              ]).map((card, i) => (
+                <div key={i} className="bg-gray-50 rounded-2xl p-5 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
+                  <div className="text-3xl mb-3">{card.emoji}</div>
+                  <h4 className="font-bold text-gray-900 text-sm mb-1">{card.title}</h4>
+                  <p className="text-gray-500 text-xs leading-relaxed">{card.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── FEATURED PRODUCTS ── */}
       {featured.length > 0 && (
         <section className="py-20 bg-white">
