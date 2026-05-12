@@ -177,19 +177,19 @@ export default function Home() {
               </h2>
               <p className="text-gray-500 leading-relaxed mb-8">
                 {lang === 'tr'
-                  ? 'Laves Kimya olarak kendi ürün formüllerimizin yanı sıra müşterilerimize özel fason üretim hizmeti sunuyoruz. Ürünlerimizi dökme ve bulk olarak teslim ediyoruz; müşterilerimiz kendi markalarını ekleyerek pazara sunabilir.'
-                  : 'In addition to our own product formulas, Laves Chemistry offers contract manufacturing services. We deliver products in bulk — customers can add their own brand and bring them to market.'}
+                  ? 'Laves Kimya olarak kendi ürün formüllerimizin yanı sıra müşterilerimize özel fason üretim hizmeti sunuyoruz. Markanıza özel etiket, ambalaj ve formülasyon ile profesyonel kimya ürünleri üretiyoruz.'
+                  : 'In addition to our own product formulas, Laves Chemistry offers contract manufacturing services tailored to our customers. We produce professional chemical products with custom labels, packaging, and formulations for your brand.'}
               </p>
               <div className="space-y-3 mb-8">
                 {(lang === 'tr' ? [
                   'Özel formülasyon geliştirme',
-                  'Dökme ve bulk teslimat',
-                  'Müşteri kendi markasını ekleyebilir',
+                  'Markanıza özel etiket ve ambalaj',
+                  'Minimum sipariş esnekliği',
                   'Kalite kontrol ve sertifikasyon desteği',
                 ] : [
                   'Custom formula development',
-                  'Bulk delivery',
-                  'Customers can add their own brand',
+                  'Private label and packaging',
+                  'Flexible minimum order quantities',
                   'Quality control and certification support',
                 ]).map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -210,13 +210,13 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-4">
               {(lang === 'tr' ? [
                 { emoji: '🧪', title: 'Formülasyon', desc: 'Uzman kimyagerlerimizle özel formül geliştirme' },
-                { emoji: '🚛', title: 'Dökme Teslimat', desc: 'Ürünler bulk ve dökme olarak teslim edilir' },
-                { emoji: '🏷️', title: 'Kendi Markanız', desc: 'Müşteriler kendi markalarını ekleyerek satabilir' },
+                { emoji: '🏷️', title: 'Özel Etiket', desc: 'Markanıza özel tasarım ve baskı' },
+                { emoji: '📦', title: 'Ambalaj', desc: 'Farklı hacim ve ambalaj seçenekleri' },
                 { emoji: '✅', title: 'Kalite', desc: 'Her üretim partisi kalite kontrolünden geçer' },
               ] : [
                 { emoji: '🧪', title: 'Formulation', desc: 'Custom formula development with expert chemists' },
-                { emoji: '🚛', title: 'Bulk Delivery', desc: 'Products are delivered in bulk format' },
-                { emoji: '🏷️', title: 'Your Brand', desc: 'Customers can sell under their own brand' },
+                { emoji: '🏷️', title: 'Private Label', desc: 'Custom design and printing for your brand' },
+                { emoji: '📦', title: 'Packaging', desc: 'Various volume and packaging options' },
                 { emoji: '✅', title: 'Quality', desc: 'Every production batch passes quality control' },
               ]).map((card, i) => (
                 <div key={i} className="bg-gray-50 rounded-2xl p-5 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
