@@ -28,6 +28,7 @@ export default function AdminLayout() {
   const token = localStorage.getItem('laves_admin_token')
   const [unread, setUnread] = useState(0)
   const [pendingOrders, setPendingOrders] = useState(0)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (token) {
@@ -52,49 +53,83 @@ export default function AdminLayout() {
     { to: '/admin/settings', icon: Settings, label: 'Ayarlar' },
   ]
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-white border-r border-gray-100 flex flex-col fixed h-full z-10">
-        <div className="p-5 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm shadow-blue-500/30">
-              <span className="text-white font-bold text-xs">L</span>
-            </div>
-            <div>
-              <span className="font-bold text-gray-900 text-sm">Admin Panel</span>
-              <p className="text-xs text-gray-400">Laves Kimya</p>
-            </div>
+  const SidebarContent = () => (
+    <>
+      <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm shadow-blue-500/30">
+            <span className="text-white font-bold text-xs">L</span>
+          </div>
+          <div>
+            <span className="font-bold text-gray-900 text-sm">Admin Panel</span>
+            <p className="text-xs text-gray-400">Laves Kimya</p>
           </div>
         </div>
-        <nav className="flex-1 p-3 space-y-0.5">
-          {links.map(l => (
-            <NavLink key={l.to} to={l.to} end={l.end}
-              className={({ isActive }) =>
-                `flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <div className="flex items-center gap-3">
-                <l.icon size={17} />
-                {l.label}
-              </div>
-              {l.badge > 0 && (
-                <span className="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {l.badge > 9 ? '9+' : l.badge}
-                </span>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-gray-100">
-          <a href="/" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors mb-1">
-            ↗ Siteyi Görüntüle
-          </a>
-          <button onClick={logout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full">
-            <LogOut size={17} /> Çıkış
-          </button>
-        </div>
+        <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+      <nav className="flex-1 p-3 space-y-0.5">
+        {links.map(l => (
+          <NavLink key={l.to} to={l.to} end={l.end}
+            onClick={() => setSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+            <div className="flex items-center gap-3">
+              <l.icon size={17} />
+              {l.label}
+            </div>
+            {l.badge > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                {l.badge > 9 ? '9+' : l.badge}
+              </span>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+      <div className="p-3 border-t border-gray-100">
+        <a href="/" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors mb-1">
+          ↗ Siteyi Görüntüle
+        </a>
+        <button onClick={logout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full">
+          <LogOut size={17} /> Çıkış
+        </button>
+      </div>
+    </>
+  )
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Desktop sidebar */}
+      <aside className="w-56 bg-white border-r border-gray-100 flex-col fixed h-full z-10 hidden md:flex">
+        <SidebarContent />
       </aside>
-      <main className="flex-1 ml-56 overflow-auto min-h-screen">
+
+      {/* Mobil overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-20 md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-56 bg-white flex flex-col shadow-xl">
+            <SidebarContent />
+          </aside>
+        </div>
+      )}
+
+      <main className="flex-1 md:ml-56 overflow-auto min-h-screen">
+        {/* Mobil header */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 sticky top-0 z-10">
+          <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-xs">L</span>
+            </div>
+            <span className="font-bold text-gray-900 text-sm">Admin Panel</span>
+          </div>
+        </div>
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>
