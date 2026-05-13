@@ -12,7 +12,11 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await api.post('/auth/login', form)
+      const res = await api.post('/auth/login', {
+        ...form,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      })
       localStorage.setItem('laves_admin_token', res.data.access_token)
       navigate('/admin')
     } catch {

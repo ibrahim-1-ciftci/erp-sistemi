@@ -14,7 +14,11 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { data } = await api.post('/auth/login', form)
+      const { data } = await api.post('/auth/login', {
+        ...form,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      })
       // Login sonrası izinleri çek
       const token = data.access_token
       localStorage.setItem('token', token) // geçici olarak set et

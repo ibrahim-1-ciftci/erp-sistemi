@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.security import verify_password, get_password_hash, create_access_token
@@ -57,11 +58,15 @@ def login(login_data: LoginRequest, request: Request, db: Session = Depends(get_
         raise HTTPException(status_code=401, detail="Hesap devre dışı")
 
     # Başarılı giriş logla
+    extra = []
+    if login_data.screen: extra.append(f"Ekran:{login_data.screen}")
+    if login_data.timezone: extra.append(f"TZ:{login_data.timezone}")
+    details = "Başarılı giriş" + (f" | {' | '.join(extra)}" if extra else "")
     db.add(ActivityLog(
         user_id=user.id,
         action="login",
         entity="auth",
-        details=f"Başarılı giriş",
+        details=details,
         ip_address=ip,
         user_agent=ua,
     ))

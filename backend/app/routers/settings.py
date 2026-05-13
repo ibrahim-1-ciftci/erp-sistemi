@@ -142,6 +142,7 @@ def get_login_logs(db: Session = Depends(get_db), current_user: User = Depends(r
             "device": device,
             "browser": browser,
             "user_agent": ua,
+            "details": log.details or "",
             "created_at": log.created_at,
         })
     return result

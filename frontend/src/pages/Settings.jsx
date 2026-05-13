@@ -308,7 +308,7 @@ export default function Settings() {
           <div className="overflow-x-auto rounded-lg border" style={{borderColor:'var(--border)'}}>
             <table className="w-full text-sm">
               <thead className="border-b" style={{backgroundColor:'var(--bg-table-head)',borderColor:'var(--border)'}}>
-                <tr>{['Kullanici','Durum','IP Adresi','Cihaz','Tarayici','Tarih'].map(h =>
+                <tr>{['Kullanici','Durum','IP Adresi','Cihaz','Tarayici','Ekran','Saat Dilimi','Tarih'].map(h =>
                   <th key={h} className="px-3 py-2 text-left font-medium text-xs" style={{color:'var(--text-secondary)'}}>{h}</th>)}</tr>
               </thead>
               <tbody>
@@ -329,6 +329,12 @@ export default function Settings() {
                     <td className="px-3 py-2 font-mono text-xs" style={{color:'var(--text-secondary)'}}>{log.ip_address}</td>
                     <td className="px-3 py-2 text-xs">{log.device}</td>
                     <td className="px-3 py-2 text-xs" style={{color:'var(--text-secondary)'}}>{log.browser}</td>
+                    <td className="px-3 py-2 text-xs" style={{color:'var(--text-secondary)'}}>
+                      {log.details?.match(/Ekran:([^\s|]+)/)?.[1] || '—'}
+                    </td>
+                    <td className="px-3 py-2 text-xs" style={{color:'var(--text-secondary)'}}>
+                      {log.details?.match(/TZ:([^\s|]+)/)?.[1] || '—'}
+                    </td>
                     <td className="px-3 py-2 text-xs" style={{color:'var(--text-secondary)'}}>
                       {new Date(log.created_at).toLocaleString('tr-TR')}
                     </td>

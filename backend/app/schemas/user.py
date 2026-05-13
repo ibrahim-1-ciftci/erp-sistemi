@@ -32,3 +32,5 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+    screen: Optional[str] = None
+    timezone: Optional[str] = None
