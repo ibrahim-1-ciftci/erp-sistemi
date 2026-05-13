@@ -11,4 +11,6 @@ class ActivityLog(Base):
     entity = Column(String, nullable=True)
     entity_id = Column(Integer, nullable=True)
     details = Column(String, nullable=True)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

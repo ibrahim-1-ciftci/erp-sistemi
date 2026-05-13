@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.models.user import User
+from app.models.activity_log import ActivityLog
 from app.schemas.user import UserCreate, UserOut, Token, LoginRequest
 
 class ChangePasswordRequest(BaseModel):
@@ -32,13 +33,40 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 @router.post("/login", response_model=Token)
-def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+def login(login_data: LoginRequest, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == login_data.username).first()
+
+    # Gerçek IP'yi al (proxy arkasındaysa X-Forwarded-For)
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    ip = forwarded_for.split(",")[0].strip() if forwarded_for else (request.client.host if request.client else "bilinmiyor")
+    ua = request.headers.get("User-Agent", "bilinmiyor")
+
     if not user or not verify_password(login_data.password, user.hashed_password):
+        # Başarısız giriş de logla
+        db.add(ActivityLog(
+            user_id=user.id if user else None,
+            action="login_failed",
+            entity="auth",
+            details=f"Başarısız giriş: {login_data.username}",
+            ip_address=ip,
+            user_agent=ua,
+        ))
+        db.commit()
         raise HTTPException(status_code=401, detail="Kullanıcı adı veya şifre hatalı")
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Hesap devre dışı")
-    
+
+    # Başarılı giriş logla
+    db.add(ActivityLog(
+        user_id=user.id,
+        action="login",
+        entity="auth",
+        details=f"Başarılı giriş",
+        ip_address=ip,
+        user_agent=ua,
+    ))
+    db.commit()
+
     token = create_access_token({"sub": str(user.id), "role": user.role})
     return {"access_token": token, "token_type": "bearer", "user": user}
 

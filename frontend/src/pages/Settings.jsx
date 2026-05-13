@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../store/authStore'
 import { useTheme, THEMES } from '../store/themeStore'
 import Modal from '../components/Modal'
-import { Save, KeyRound, Building2, Receipt, Users, Plus, Edit2, Trash2, ShieldCheck, ShieldOff, ShieldAlert, Palette, Shield } from 'lucide-react'
+import { Save, KeyRound, Building2, Receipt, Users, Plus, Edit2, Trash2, ShieldCheck, ShieldOff, ShieldAlert, Palette, Shield, MonitorSmartphone } from 'lucide-react'
 
 const MODULE_LABELS = { raw_materials:'Hammaddeler', products:'Urunler', bom:'Receteler', production:'Uretim', orders:'Siparisler', customers:'Musteriler', payments:'Vade Takibi', debts:'Borc Takibi', cashflow:'Kasa/Ciro', purchases:'Satin Alma', suppliers:'Tedarikciler', reports:'Raporlar', settings:'Ayarlar' }
 const ACTION_LABELS = { view:'Goruntule', create:'Ekle', edit:'Duzenle', delete:'Sil' }
@@ -31,15 +31,21 @@ export default function Settings() {
   const [permData, setPermData] = useState({})
   const [permModules, setPermModules] = useState([])
   const [permDirty, setPermDirty] = useState(false)
+  const [loginLogs, setLoginLogs] = useState([])
+  const [logsLoading, setLogsLoading] = useState(false)
 
   const allRoles = [...SYSTEM_ROLES, ...customRoles]
 
   useEffect(() => {
     api.get('/settings').then(r => setCompany({ company_name:r.data.company_name, company_sub:r.data.company_sub, kdv_rate:r.data.kdv_rate, default_unit:r.data.default_unit||'kg', weight_units:r.data.weight_units||'kg,g,ton,lt,ml,adet,kutu,paket,metre,cm' }))
-    if (isAdmin) { loadUsers(); loadCustomRoles(); loadPerms('user') }
+    if (isAdmin) { loadUsers(); loadCustomRoles(); loadPerms('user'); loadLoginLogs() }
   }, [])
 
   const loadUsers = () => api.get('/settings/users').then(r => setUsers(r.data))
+  const loadLoginLogs = () => {
+    setLogsLoading(true)
+    api.get('/settings/login-logs').then(r => setLoginLogs(r.data)).catch(() => {}).finally(() => setLogsLoading(false))
+  }
   const loadCustomRoles = () => api.get('/settings/roles').then(r => setCustomRoles(r.data)).catch(() => {})
   const loadPerms = (role) => api.get(`/settings/permissions/${role}`).then(r => { setPermData(r.data.permissions); setPermModules(r.data.modules); setPermDirty(false) }).catch(() => {})
   const handlePermTabChange = (role) => { setPermTab(role); loadPerms(role) }
@@ -284,6 +290,54 @@ export default function Settings() {
           {permDirty && (
             <button onClick={savePerms} className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-sm" style={{backgroundColor:'var(--accent)',color:'var(--accent-text)'}}><Save size={15} /> Yetkileri Kaydet</button>
           )}
+        </div>
+      )}
+
+      {/* Giris Gecmisi */}
+      {isAdmin && (
+        <div className="rounded-xl shadow-sm border p-5" style={{backgroundColor:'var(--bg-card)',borderColor:'var(--border)'}}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-teal-50 rounded-lg"><MonitorSmartphone size={18} className="text-teal-600" /></div>
+              <h2 className="font-semibold" style={{color:'var(--text-primary)'}}>Giris Gecmisi</h2>
+            </div>
+            <button onClick={loadLoginLogs} className="text-xs px-3 py-1.5 rounded-lg border" style={{color:'var(--accent)',borderColor:'var(--border)'}}>
+              Yenile
+            </button>
+          </div>
+          <div className="overflow-x-auto rounded-lg border" style={{borderColor:'var(--border)'}}>
+            <table className="w-full text-sm">
+              <thead className="border-b" style={{backgroundColor:'var(--bg-table-head)',borderColor:'var(--border)'}}>
+                <tr>{['Kullanici','Durum','IP Adresi','Cihaz','Tarayici','Tarih'].map(h =>
+                  <th key={h} className="px-3 py-2 text-left font-medium text-xs" style={{color:'var(--text-secondary)'}}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {logsLoading && (
+                  <tr><td colSpan={6} className="text-center py-6 text-sm" style={{color:'var(--text-secondary)'}}>Yukleniyor...</td></tr>
+                )}
+                {!logsLoading && loginLogs.length === 0 && (
+                  <tr><td colSpan={6} className="text-center py-6 text-sm" style={{color:'var(--text-secondary)'}}>Henuz giris kaydi yok</td></tr>
+                )}
+                {!logsLoading && loginLogs.map(log => (
+                  <tr key={log.id} style={{borderTop:`1px solid var(--border)`,color:'var(--text-primary)'}}>
+                    <td className="px-3 py-2 font-medium">{log.username}</td>
+                    <td className="px-3 py-2">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${log.action==='login'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>
+                        {log.action==='login'?'✓ Basarili':'✗ Basarisiz'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs" style={{color:'var(--text-secondary)'}}>{log.ip_address}</td>
+                    <td className="px-3 py-2 text-xs">{log.device}</td>
+                    <td className="px-3 py-2 text-xs" style={{color:'var(--text-secondary)'}}>{log.browser}</td>
+                    <td className="px-3 py-2 text-xs" style={{color:'var(--text-secondary)'}}>
+                      {new Date(log.created_at).toLocaleString('tr-TR')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs mt-2" style={{color:'var(--text-secondary)'}}>Son 100 giris denemesi gosteriliyor.</p>
         </div>
       )}
 

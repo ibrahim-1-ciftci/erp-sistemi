@@ -97,7 +97,54 @@ def change_username(data: UsernameChange, db: Session = Depends(get_db), current
     return {"message": "Kullanıcı adı değiştirildi", "username": new_username}
 
 
-# ── Kullanıcı Yönetimi (sadece admin) ──────────────────────────────────────
+@router.get("/login-logs")
+def get_login_logs(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    from app.models.activity_log import ActivityLog
+    from app.models.user import User as UserModel
+    logs = (
+        db.query(ActivityLog, UserModel.username)
+        .outerjoin(UserModel, ActivityLog.user_id == UserModel.id)
+        .filter(ActivityLog.action.in_(["login", "login_failed"]))
+        .order_by(ActivityLog.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    result = []
+    for log, username in logs:
+        # User-Agent'ı okunabilir hale getir
+        ua = log.user_agent or ""
+        if "Mobile" in ua or "Android" in ua or "iPhone" in ua:
+            device = "📱 Mobil"
+        elif "Windows" in ua:
+            device = "🖥️ Windows"
+        elif "Mac" in ua:
+            device = "🍎 Mac"
+        elif "Linux" in ua:
+            device = "🐧 Linux"
+        else:
+            device = "❓ Bilinmiyor"
+
+        browser = "Bilinmiyor"
+        if "Chrome" in ua and "Edg" not in ua:
+            browser = "Chrome"
+        elif "Firefox" in ua:
+            browser = "Firefox"
+        elif "Safari" in ua and "Chrome" not in ua:
+            browser = "Safari"
+        elif "Edg" in ua:
+            browser = "Edge"
+
+        result.append({
+            "id": log.id,
+            "username": username or f"ID:{log.user_id}",
+            "action": log.action,
+            "ip_address": log.ip_address or "—",
+            "device": device,
+            "browser": browser,
+            "user_agent": ua,
+            "created_at": log.created_at,
+        })
+    return result
 
 class UserCreateAdmin(BaseModel):
     username: str
