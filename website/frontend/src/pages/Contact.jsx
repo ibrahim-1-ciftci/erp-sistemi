@@ -128,6 +128,30 @@ export default function Contact() {
             </button>
           </form>
         </div>
+
+        {/* Harita */}
+        <div className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+            <MapPin size={16} className="text-blue-600" />
+            <span className="font-semibold text-gray-900 text-sm">
+              {lang === 'tr' ? 'Konumumuz' : 'Our Location'}
+            </span>
+          </div>
+          <iframe
+            title="Laves Kimya Konum"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3181.0!2d38.7955!3d37.1591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDA5JzMyLjgiTiAzOMKwNDcnNDMuOCJF!5e0!3m2!1str!2str!4v1700000000000!5m2!1str!2str&q=Eyyüp+Nebi,+Şehit+Uzman+Çavuş+Mehmet+Gözcü+Sokak+No:82/B,+63000+Eyyübiye/Şanlıurfa"
+            width="100%"
+            height="380"
+            style={{ border: 0, display: 'block' }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+          <div className="px-6 py-3 bg-gray-50 text-xs text-gray-500 flex items-center gap-1.5">
+            <MapPin size={12} />
+            Eyyüp Nebi, Şehit Uzman Çavuş Mehmet Gözcü Sokak No:82/B, 63000 Eyyübiye/Şanlıurfa
+          </div>
+        </div>
       </div>
     </div>
   )
