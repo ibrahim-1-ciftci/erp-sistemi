@@ -139,7 +139,7 @@ export default function Contact() {
           </div>
           <iframe
             title="Laves Kimya Konum"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3181.0!2d38.7955!3d37.1591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDA5JzMyLjgiTiAzOMKwNDcnNDMuOCJF!5e0!3m2!1str!2str!4v1700000000000!5m2!1str!2str&q=Eyyüp+Nebi,+Şehit+Uzman+Çavuş+Mehmet+Gözcü+Sokak+No:82/B,+63000+Eyyübiye/Şanlıurfa"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12724.037696319363!2d38.79022015535664!3d37.12869081590371!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x153471076e20b7bd%3A0xbbcc02766cf01cfb!2sLaves%20Kimya!5e0!3m2!1str!2str!4v1778678230890!5m2!1str!2str"
             width="100%"
             height="380"
             style={{ border: 0, display: 'block' }}
