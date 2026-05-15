@@ -35,84 +35,86 @@ def add_company_header(ws, col_count: int):
 def dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     from app.models.payment import Payment
     from app.models.debt import Debt
-    materials = db.query(RawMaterial).all()
-    low_stock = [m for m in materials if m.stock_quantity < m.min_stock_level]
-    total_material_value = sum(m.stock_quantity * m.purchase_price for m in materials)
+    from app.models.customer import Customer
+    from datetime import date as dt_date
 
+    # Siparişler
+    pending_orders    = db.query(Order).filter(Order.status == OrderStatus.pending).count()
+    completed_orders  = db.query(Order).filter(Order.status == OrderStatus.completed).count()
+    shipped_orders    = db.query(Order).filter(Order.status == OrderStatus.shipped).count()
+    total_orders      = db.query(Order).count()
+
+    # Bu ay siparişler
+    month_start = dt_date.today().replace(day=1)
+    month_orders = db.query(Order).filter(func.date(Order.created_at) >= month_start).count()
+
+    # Ürünler
     products = db.query(Product).all()
-    total_product_value = sum(p.stock_quantity * p.sale_price for p in products)
+    total_products = len(products)
 
-    pending_orders = db.query(Order).filter(Order.status == OrderStatus.pending).count()
-    in_production_orders = db.query(Order).filter(Order.status == OrderStatus.in_production).count()
+    # Müşteriler
+    total_customers = db.query(Customer).count()
 
-    today_productions = db.query(Production).filter(
-        Production.status == ProductionStatus.completed,
-        func.date(Production.completed_at) == func.current_date()
-    ).all()
-
-    # Son 6 ay üretim maliyeti
-    monthly_production = []
-    for i in range(5, -1, -1):
-        d = date.today().replace(day=1) - timedelta(days=i*28)
-        month_start = d.replace(day=1)
-        if month_start.month == 12:
-            month_end = month_start.replace(year=month_start.year+1, month=1, day=1)
-        else:
-            month_end = month_start.replace(month=month_start.month+1, day=1)
-        cost = db.query(func.sum(Production.total_cost)).filter(
-            Production.status == ProductionStatus.completed,
-            func.date(Production.completed_at) >= month_start,
-            func.date(Production.completed_at) < month_end
-        ).scalar() or 0
-        revenue = db.query(func.sum(Production.total_cost)).filter(
-            Production.status == ProductionStatus.completed,
-            func.date(Production.completed_at) >= month_start,
-            func.date(Production.completed_at) < month_end
-        ).scalar() or 0
-        monthly_production.append({
-            "month": month_start.strftime("%b %Y"),
-            "cost": round(cost, 2),
-        })
-
-    # Vade & borç özeti
+    # Vade (alacak)
     payments = db.query(Payment).all()
     total_receivable = sum(p.total_amount - (p.paid_amount or 0) for p in payments if (p.paid_amount or 0) < p.total_amount)
+    overdue_payments = sum(1 for p in payments if p.due_date < dt_date.today() and (p.paid_amount or 0) < p.total_amount)
+
+    # Borç
     debts = db.query(Debt).all()
     total_payable = sum(d.total_amount - (d.paid_amount or 0) for d in debts if (d.paid_amount or 0) < d.total_amount)
+    overdue_debts = sum(1 for d in debts if d.due_date < dt_date.today() and (d.paid_amount or 0) < d.total_amount)
 
-    # Kasa / Ciro — bu ay
-    from app.models.cashflow import CashFlow
-    from datetime import date as dt_date
-    month_start = dt_date.today().replace(day=1)
-    cashflows = db.query(CashFlow).filter(CashFlow.flow_date >= month_start).all()
-    monthly_cash_income  = sum(f.amount for f in cashflows if f.flow_type == "income")
-    monthly_cash_expense = sum(f.amount for f in cashflows if f.flow_type == "expense")
-    monthly_cash_net     = monthly_cash_income - monthly_cash_expense
-    # Bugünkü kasa
-    today_flows = db.query(CashFlow).filter(CashFlow.flow_date == dt_date.today()).all()
-    today_income  = sum(f.amount for f in today_flows if f.flow_type == "income")
-    today_expense = sum(f.amount for f in today_flows if f.flow_type == "expense")
+    # Son 6 ay sipariş sayısı (grafik)
+    monthly_orders = []
+    for i in range(5, -1, -1):
+        d = dt_date.today().replace(day=1) - timedelta(days=i*28)
+        ms = d.replace(day=1)
+        if ms.month == 12:
+            me = ms.replace(year=ms.year+1, month=1, day=1)
+        else:
+            me = ms.replace(month=ms.month+1, day=1)
+        count = db.query(Order).filter(
+            func.date(Order.created_at) >= ms,
+            func.date(Order.created_at) < me
+        ).count()
+        # Bu aydaki toplam sipariş tutarı
+        orders_in_month = db.query(Order).filter(
+            func.date(Order.created_at) >= ms,
+            func.date(Order.created_at) < me
+        ).all()
+        monthly_orders.append({
+            "month": ms.strftime("%b %Y"),
+            "count": count,
+        })
+
+    # Son 5 sipariş
+    recent_orders = db.query(Order).order_by(Order.created_at.desc()).limit(5).all()
+    recent_orders_out = []
+    for o in recent_orders:
+        total_val = sum((i.unit_price or 0) * i.quantity for i in o.items)
+        recent_orders_out.append({
+            "id": o.id,
+            "customer_name": o.customer_name,
+            "status": o.status,
+            "total_value": round(total_val, 2),
+            "created_at": o.created_at,
+        })
 
     return {
-        "low_stock_count": len(low_stock),
-        "low_stock_items": [{"id": m.id, "name": m.name, "stock_quantity": m.stock_quantity, "min_stock_level": m.min_stock_level, "unit": m.unit} for m in low_stock],
-        "total_material_value": total_material_value,
-        "total_product_value": total_product_value,
-        "total_stock_value": total_material_value + total_product_value,
-        "pending_orders": pending_orders,
-        "in_production_orders": in_production_orders,
-        "today_production_count": len(today_productions),
-        "today_production_cost": sum(p.total_cost for p in today_productions),
-        "total_products": len(products),
-        "total_materials": len(materials),
-        "monthly_production": monthly_production,
-        "total_receivable": round(total_receivable, 2),
-        "total_payable": round(total_payable, 2),
-        "monthly_cash_income": round(monthly_cash_income, 2),
-        "monthly_cash_expense": round(monthly_cash_expense, 2),
-        "monthly_cash_net": round(monthly_cash_net, 2),
-        "today_income": round(today_income, 2),
-        "today_expense": round(today_expense, 2),
+        "pending_orders":    pending_orders,
+        "completed_orders":  completed_orders,
+        "shipped_orders":    shipped_orders,
+        "total_orders":      total_orders,
+        "month_orders":      month_orders,
+        "total_products":    total_products,
+        "total_customers":   total_customers,
+        "total_receivable":  round(total_receivable, 2),
+        "overdue_payments":  overdue_payments,
+        "total_payable":     round(total_payable, 2),
+        "overdue_debts":     overdue_debts,
+        "monthly_orders":    monthly_orders,
+        "recent_orders":     recent_orders_out,
     }
 
 @router.get("/stock-movements")
