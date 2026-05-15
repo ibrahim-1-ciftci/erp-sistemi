@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 from .core.database import Base, engine
 from .models import admin, category, product, product_image, contact, setting, blog, order as order_model
-from .routers import auth, categories, products, contact as contact_router, settings as settings_router, blog as blog_router, chat as chat_router, orders as orders_router, sitemap as sitemap_router
+from .routers import auth, categories, products, contact as contact_router, settings as settings_router, blog as blog_router, chat as chat_router, orders as orders_router, sitemap as sitemap_router, payment as payment_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -30,6 +30,7 @@ app.include_router(blog_router.router)
 app.include_router(chat_router.router)
 app.include_router(orders_router.router)
 app.include_router(sitemap_router.router)
+app.include_router(payment_router.router)
 
 @app.get("/")
 def root():

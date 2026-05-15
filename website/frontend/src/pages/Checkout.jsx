@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, CreditCard, Banknote, Lock, CheckCircle } from 'lucide-react'
+import { ArrowLeft, CreditCard, Banknote, Lock, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api/axios'
 import { cartStore } from '../store/cartStore'
@@ -14,7 +14,8 @@ export default function Checkout() {
   const [items, setItems] = useState(cartStore.getItems())
   const [loading, setLoading] = useState(false)
   const [settings, setSettings] = useState({})
-  const [paymentMethod, setPaymentMethod] = useState('transfer') // transfer | card
+  const [paymentMethod, setPaymentMethod] = useState('transfer')
+  const [iframeUrl, setIframeUrl] = useState(null)
   const [form, setForm] = useState({
     name: '', email: '', phone: '', address: '', city: '', note: ''
   })
@@ -32,7 +33,24 @@ export default function Checkout() {
     e.preventDefault()
     setLoading(true)
     try {
-      // Siparişi backend'e gönder
+      if (paymentMethod === 'card') {
+        // PayTR iFrame başlat
+        const res = await api.post('/payment/start', {
+          ...form,
+          items: items.map(i => ({
+            name: lang === 'tr' ? i.name_tr : i.name_en,
+            qty: i.qty,
+            price: i.price,
+          })),
+          total: cartStore.getTotal(),
+          lang,
+        })
+        setIframeUrl(res.data.iframe_url)
+        setLoading(false)
+        return
+      }
+
+      // Havale
       await api.post('/orders', {
         customer: form,
         items: items.map(i => ({ product_id: i.id, name: lang === 'tr' ? i.name_tr : i.name_en, qty: i.qty, price: i.price })),
@@ -43,9 +61,7 @@ export default function Checkout() {
       cartStore.clear()
       navigate('/siparis-tamamlandi')
     } catch (err) {
-      // Backend henüz hazır değilse yine de devam et
-      cartStore.clear()
-      navigate('/siparis-tamamlandi')
+      toast.error(err.response?.data?.detail || (lang === 'tr' ? 'Bir hata oluştu.' : 'An error occurred.'))
     } finally {
       setLoading(false)
     }
@@ -165,20 +181,13 @@ export default function Checkout() {
                         * {lang === 'tr' ? (settings.payment_note_tr || '') : (settings.payment_note_en || '')}
                       </p>
                     )}
-                    {!settings.payment_iban && !settings.payment_bank && (
-                      <p className="text-blue-600 text-xs">Ödeme bilgileri admin panelinden ayarlanabilir.</p>
-                    )}
                   </div>
                 )}
 
                 {paymentMethod === 'card' && (
-                  <div className="mt-4 bg-amber-50 rounded-xl p-4 text-sm text-amber-800 flex items-start gap-2">
+                  <div className="mt-4 bg-green-50 rounded-xl p-4 text-sm text-green-800 flex items-start gap-2">
                     <Lock size={16} className="flex-shrink-0 mt-0.5" />
-                    <p>
-                      {lang === 'tr'
-                        ? 'Kredi kartı ödemesi yakında aktif olacak. Şimdilik havale ile sipariş verebilirsiniz.'
-                        : 'Credit card payment will be active soon. You can order via bank transfer for now.'}
-                    </p>
+                    <p>{lang === 'tr' ? '3D Secure ile güvenli ödeme. Kartınız PayTR altyapısı üzerinden işlenir.' : 'Secure payment with 3D Secure via PayTR.'}</p>
                   </div>
                 )}
               </div>
@@ -210,12 +219,14 @@ export default function Checkout() {
                 )}
               </div>
 
-              <button type="submit" disabled={loading || paymentMethod === 'card'}
+              <button type="submit" disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold py-4 rounded-2xl transition-all hover:shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2">
                 <Lock size={16} />
                 {loading
-                  ? (lang === 'tr' ? 'Gönderiliyor...' : 'Sending...')
-                  : (lang === 'tr' ? 'Siparişi Onayla' : 'Confirm Order')}
+                  ? (lang === 'tr' ? 'Yükleniyor...' : 'Loading...')
+                  : paymentMethod === 'card'
+                    ? (lang === 'tr' ? 'Ödemeye Geç' : 'Proceed to Payment')
+                    : (lang === 'tr' ? 'Siparişi Onayla' : 'Confirm Order')}
               </button>
 
               <p className="text-xs text-gray-400 text-center">
@@ -231,6 +242,36 @@ export default function Checkout() {
           </div>
         </form>
       </div>
+
+      {/* PayTR iFrame Modal */}
+      {iframeUrl && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-2xl w-full max-w-lg relative">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Lock size={16} className="text-green-600" />
+                <span className="font-semibold text-gray-900 text-sm">
+                  {lang === 'tr' ? 'Güvenli Ödeme' : 'Secure Payment'}
+                </span>
+                <span className="text-xs text-gray-400">— PayTR</span>
+              </div>
+              <button onClick={() => setIframeUrl(null)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <iframe
+              src={iframeUrl}
+              width="100%"
+              height="560"
+              frameBorder="0"
+              scrolling="yes"
+              style={{ display: 'block' }}
+              title="PayTR Ödeme"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
