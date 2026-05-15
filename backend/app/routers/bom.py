@@ -139,7 +139,7 @@ def download_bom_pdf(bom_id: int, db: Session = Depends(get_db), current_user: U
         raise HTTPException(status_code=404, detail="Reçete bulunamadı")
     data = build_bom_out(bom)
     pdf = _generate_bom_pdf([data])
-    filename = f"recete_{data['product_name']}_{data['version']}.pdf".replace(" ", "_")
+    filename = _safe_filename(f"recete_{data['product_name']}_v{data['version']}.pdf")
     return StreamingResponse(BytesIO(pdf), media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"})
 
@@ -153,9 +153,18 @@ def download_product_boms_pdf(product_id: int, db: Session = Depends(get_db), cu
     data_list = [build_bom_out(b) for b in boms]
     pdf = _generate_bom_pdf(data_list)
     product_name = data_list[0]['product_name'] or f"urun_{product_id}"
-    filename = f"recete_{product_name}_tum_versiyonlar.pdf".replace(" ", "_")
+    filename = _safe_filename(f"recete_{product_name}_tum_versiyonlar.pdf")
     return StreamingResponse(BytesIO(pdf), media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+
+def _safe_filename(name: str) -> str:
+    """Türkçe ve özel karakterleri ASCII'ye çevir"""
+    tr_map = str.maketrans('çğıöşüÇĞİÖŞÜ', 'cgiosucgiosu')
+    name = name.translate(tr_map)
+    import re
+    name = re.sub(r'[^\w\-.]', '_', name)
+    return name
 
 
 def _generate_bom_pdf(bom_list: list) -> bytes:
