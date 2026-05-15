@@ -14,7 +14,7 @@ export default function Checkout() {
   const [items, setItems] = useState(cartStore.getItems())
   const [loading, setLoading] = useState(false)
   const [settings, setSettings] = useState({})
-  const [paymentMethod, setPaymentMethod] = useState('transfer')
+  const [paymentMethod, setPaymentMethod] = useState('card')
   const [iframeUrl, setIframeUrl] = useState(null)
   const [form, setForm] = useState({
     name: '', email: '', phone: '', address: '', city: '', note: ''
