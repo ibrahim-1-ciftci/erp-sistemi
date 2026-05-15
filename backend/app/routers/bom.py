@@ -178,6 +178,36 @@ def _generate_bom_pdf(bom_list: list) -> bytes:
     from reportlab.pdfbase.ttfonts import TTFont
     import os
 
+    # Türkçe destekli font kaydet
+    FONT_NORMAL = 'Helvetica'
+    FONT_BOLD   = 'Helvetica-Bold'
+    FONT_ITALIC = 'Helvetica-Oblique'
+
+    font_candidates = [
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+        '/usr/share/fonts/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',
+        '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+        '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+    ]
+    regular_path = next((p for p in font_candidates if 'Bold' not in p and os.path.exists(p)), None)
+    bold_path    = next((p for p in font_candidates if 'Bold' in p and os.path.exists(p)), None)
+
+    if regular_path:
+        try:
+            pdfmetrics.registerFont(TTFont('TR', regular_path))
+            FONT_NORMAL = 'TR'
+            FONT_ITALIC = 'TR'
+        except Exception:
+            pass
+    if bold_path:
+        try:
+            pdfmetrics.registerFont(TTFont('TR-Bold', bold_path))
+            FONT_BOLD = 'TR-Bold'
+        except Exception:
+            pass
+
     buf = BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,
         leftMargin=1.5*cm, rightMargin=1.5*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
@@ -189,15 +219,13 @@ def _generate_bom_pdf(bom_list: list) -> bytes:
     LIGHT_GRAY = colors.HexColor('#f9fafb')
 
     title_style = ParagraphStyle('title', parent=styles['Normal'],
-        fontSize=14, textColor=colors.white, alignment=TA_CENTER, fontName='Helvetica-Bold')
+        fontSize=14, textColor=colors.white, alignment=TA_CENTER, fontName=FONT_BOLD)
     h1_style = ParagraphStyle('h1', parent=styles['Normal'],
-        fontSize=12, textColor=BLUE, fontName='Helvetica-Bold', spaceAfter=4)
+        fontSize=12, textColor=BLUE, fontName=FONT_BOLD, spaceAfter=4)
     h2_style = ParagraphStyle('h2', parent=styles['Normal'],
-        fontSize=10, textColor=GRAY, fontName='Helvetica', spaceAfter=2)
+        fontSize=10, textColor=GRAY, fontName=FONT_NORMAL, spaceAfter=2)
     note_style = ParagraphStyle('note', parent=styles['Normal'],
-        fontSize=8, textColor=GRAY, fontName='Helvetica-Oblique')
-    total_style = ParagraphStyle('total', parent=styles['Normal'],
-        fontSize=10, textColor=BLUE, fontName='Helvetica-Bold', alignment=TA_RIGHT)
+        fontSize=8, textColor=GRAY, fontName=FONT_ITALIC)
 
     story = []
 
@@ -206,25 +234,21 @@ def _generate_bom_pdf(bom_list: list) -> bytes:
     header_table = Table(header_data, colWidths=[18*cm])
     header_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), BLUE),
-        ('ROUNDEDCORNERS', [6]),
         ('TOPPADDING', (0,0), (-1,-1), 10),
         ('BOTTOMPADDING', (0,0), (-1,-1), 10),
     ]))
     story.append(header_table)
     story.append(Spacer(1, 0.4*cm))
 
-    # Tarih
     story.append(Paragraph(f'Oluşturma Tarihi: {datetime.now().strftime("%d.%m.%Y %H:%M")}', h2_style))
     story.append(Spacer(1, 0.3*cm))
 
     for bom in bom_list:
-        # Ürün başlığı
         story.append(Paragraph(f'{bom["product_name"]}  —  Versiyon {bom["version"]}', h1_style))
         if bom.get('notes'):
             story.append(Paragraph(f'Not: {bom["notes"]}', note_style))
         story.append(Spacer(1, 0.2*cm))
 
-        # Tablo başlıkları
         col_widths = [1*cm, 6.5*cm, 2.5*cm, 2.5*cm, 2.5*cm, 3*cm]
         header_row = ['#', 'Hammadde', 'Miktar', 'Birim', 'Birim Fiyat', 'Satır Maliyeti']
         table_data = [header_row]
@@ -235,38 +259,33 @@ def _generate_bom_pdf(bom_list: list) -> bytes:
                 item['raw_material_name'],
                 str(item['quantity_required']),
                 item['raw_material_unit'],
-                f"₺{item['purchase_price']:.2f}",
-                f"₺{item['line_cost']:.2f}",
+                f"\u20ba{item['purchase_price']:.2f}",
+                f"\u20ba{item['line_cost']:.2f}",
             ])
 
-        # Toplam satırı
-        table_data.append(['', '', '', '', 'TOPLAM MALİYET', f"₺{bom['total_cost']:.2f}"])
+        table_data.append(['', '', '', '', 'TOPLAM MALİYET', f"\u20ba{bom['total_cost']:.2f}"])
 
         t = Table(table_data, colWidths=col_widths)
         t.setStyle(TableStyle([
-            # Başlık satırı
             ('BACKGROUND', (0,0), (-1,0), BLUE),
             ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTNAME', (0,0), (-1,0), FONT_BOLD),
             ('FONTSIZE', (0,0), (-1,0), 8),
             ('ALIGN', (0,0), (-1,0), 'CENTER'),
             ('TOPPADDING', (0,0), (-1,0), 6),
             ('BOTTOMPADDING', (0,0), (-1,0), 6),
-            # Veri satırları
-            ('FONTNAME', (0,1), (-1,-2), 'Helvetica'),
+            ('FONTNAME', (0,1), (-1,-2), FONT_NORMAL),
             ('FONTSIZE', (0,1), (-1,-2), 8),
             ('ROWBACKGROUNDS', (0,1), (-1,-2), [colors.white, LIGHT_GRAY]),
             ('ALIGN', (2,1), (-1,-1), 'RIGHT'),
             ('TOPPADDING', (0,1), (-1,-2), 4),
             ('BOTTOMPADDING', (0,1), (-1,-2), 4),
-            # Toplam satırı
             ('BACKGROUND', (0,-1), (-1,-1), LIGHT_BLUE),
-            ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+            ('FONTNAME', (0,-1), (-1,-1), FONT_BOLD),
             ('FONTSIZE', (0,-1), (-1,-1), 9),
             ('TEXTCOLOR', (-1,-1), (-1,-1), BLUE),
             ('TOPPADDING', (0,-1), (-1,-1), 6),
             ('BOTTOMPADDING', (0,-1), (-1,-1), 6),
-            # Genel
             ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#e5e7eb')),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ]))
