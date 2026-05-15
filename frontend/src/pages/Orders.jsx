@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import Table from '../components/Table'
 import Modal from '../components/Modal'
 import Pagination from '../components/Pagination'
-import { Plus, Search, Eye, Trash2, Factory, FileText, Truck, Download, ArchiveRestore, ClipboardList, Edit2 } from 'lucide-react'
+import { Plus, Search, Eye, Trash2, FileText, Truck, Download, ArchiveRestore, ClipboardList, Edit2 } from 'lucide-react'
 
 const emptyForm = { customer_id: '', customer_name: '', customer_phone: '', customer_email: '', notes: '', items: [] }
 
@@ -93,14 +93,6 @@ export default function Orders() {
       }
     }
     setForm(f => ({ ...f, customer_id: c.id, customer_name: c.name, customer_phone: c.phone || '', customer_email: c.email || '', items: updatedItems }))
-    // Özel reçete kontrolü
-    try {
-      const bomsRes = await api.get(`/customers/${c.id}/boms`)
-      if (bomsRes.data.length > 0) {
-        const names = bomsRes.data.map(b => b.product_name).join(', ')
-        toast(`⚗️ Bu müşteri için özel reçete tanımlı: ${names}`, { duration: 4000, icon: '⚗️' })
-      }
-    } catch {}
   }
 
   const handleSave = async () => {
@@ -303,9 +295,7 @@ export default function Orders() {
         <button onClick={() => setViewOrder(r)} className="text-blue-600 hover:text-blue-800 p-1"><Eye size={14} /></button>
         <button onClick={() => downloadInvoice(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Fatura İndir"><FileText size={14} /></button>
         <button onClick={() => openEditOrder(r)} className="text-gray-500 hover:text-gray-700 p-1" title="Düzenle"><Edit2 size={14} /></button>
-        {r.status === 'pending' && <button onClick={() => sendToProduction(r.id)} className="text-orange-500 hover:text-orange-700 p-1" title="Üretime Al"><Factory size={14} /></button>}
-        {r.status === 'in_production' && <button onClick={() => completeOrder(r.id)} className="text-green-600 hover:text-green-800 p-1 text-xs font-medium" title="Tamamla">✓</button>}
-        {(r.status === 'completed' || r.status === 'in_production') && <button onClick={() => shipOrder(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Sevkiyata Al"><Truck size={14} /></button>}
+        {(r.status === 'pending' || r.status === 'completed') && <button onClick={() => shipOrder(r.id)} className="text-purple-600 hover:text-purple-800 p-1" title="Sevkiyata Al"><Truck size={14} /></button>}
         <button onClick={() => handleDelete(r.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={14} /></button>
       </div>
     )}
