@@ -10,10 +10,8 @@ from ..models.setting import SiteSetting
 router = APIRouter(prefix="/api/payment", tags=["payment"])
 
 def get_paytr_creds(db: Session):
-    merchant_id   = os.getenv("PAYTR_MERCHANT_ID", "")
-    merchant_key  = os.getenv("PAYTR_MERCHANT_KEY", "")
-    merchant_salt = os.getenv("PAYTR_MERCHANT_SALT", "")
-    return merchant_id, merchant_key, merchant_salt
+    from ..core.config import settings
+    return settings.PAYTR_MERCHANT_ID, settings.PAYTR_MERCHANT_KEY, settings.PAYTR_MERCHANT_SALT
 
 
 class PaymentItem(BaseModel):

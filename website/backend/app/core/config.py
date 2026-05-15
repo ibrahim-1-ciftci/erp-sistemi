@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     UPLOAD_DIR: str = "uploads"
     GROQ_API_KEY: str = ""
+    PAYTR_MERCHANT_ID: str = ""
+    PAYTR_MERCHANT_KEY: str = ""
+    PAYTR_MERCHANT_SALT: str = ""
+    SITE_URL: str = "https://laveskimya.com"
 
     class Config:
         env_file = ".env"
