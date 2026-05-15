@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import api from '../api/axios'
 import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
-import { Plus, Trash2, Eye, Edit2, Search, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, Trash2, Eye, Edit2, Search, ChevronUp, ChevronDown, Download, FileDown } from 'lucide-react'
 
 const emptyForm = { product_id: '', notes: '', items: [] }
 
@@ -321,6 +321,16 @@ export default function BOMPage() {
     try { await api.delete(`/bom/${id}`); toast.success('Silindi'); load() } catch { toast.error('Hata') }
   }
 
+  const downloadPdf = async (url, filename) => {
+    try {
+      const res = await api.get(url, { responseType: 'blob' })
+      const href = URL.createObjectURL(res.data)
+      const a = document.createElement('a')
+      a.href = href; a.download = filename; a.click()
+      URL.revokeObjectURL(href)
+    } catch { toast.error('PDF oluşturulamadı') }
+  }
+
   const grouped = boms.reduce((acc, b) => {
     if (!acc[b.product_id]) acc[b.product_id] = { name: b.product_name, versions: [] }
     acc[b.product_id].versions.push(b)
@@ -356,7 +366,15 @@ export default function BOMPage() {
       <div className="space-y-4">
         {groupedSorted.map(([pid, { name, versions }]) => (
           <div key={pid} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <h3 className="font-semibold text-gray-800 mb-3">{name}</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-800">{name}</h3>
+              <button
+                onClick={() => downloadPdf(`/bom/product/${pid}/pdf`, `recete_${name}_tum_versiyonlar.pdf`)}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+                title="Tüm versiyonları PDF indir">
+                <FileDown size={13} /> Tümünü PDF İndir
+              </button>
+            </div>
             <div className="space-y-2">
               {versions.map(b => (
                 <div key={b.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -367,6 +385,8 @@ export default function BOMPage() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => setViewBom(b)} className="text-blue-600 hover:text-blue-800 p-1" title="Görüntüle"><Eye size={15} /></button>
+                    <button onClick={() => downloadPdf(`/bom/${b.id}/pdf`, `recete_${b.product_name}_v${b.version}.pdf`)}
+                      className="text-green-600 hover:text-green-800 p-1" title="PDF İndir"><Download size={15} /></button>
                     <button onClick={() => openEdit(b)} className="text-gray-500 hover:text-gray-700 p-1" title="Düzenle"><Edit2 size={15} /></button>
                     <button onClick={() => handleDelete(b.id)} className="text-red-500 hover:text-red-700 p-1" title="Sil"><Trash2 size={15} /></button>
                   </div>
