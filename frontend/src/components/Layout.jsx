@@ -2,26 +2,20 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../store/authStore'
 import {
-  LayoutDashboard, Package, Boxes, ClipboardList,
-  Factory, ShoppingCart, Truck, BarChart3, LogOut, Users, CreditCard, Settings, Landmark, ShoppingBag, Wallet, UserCheck, Menu, X
+  LayoutDashboard, Package,
+  ShoppingCart, BarChart3, LogOut, Users, CreditCard, Settings, Landmark, UserCheck, Menu, X
 } from 'lucide-react'
 
 const navItems = [
-  { to: '/',             icon: LayoutDashboard, label: 'Dashboard',    module: null },
-  { to: '/raw-materials',icon: Boxes,           label: 'Hammaddeler',  module: 'raw_materials' },
-  { to: '/products',     icon: Package,         label: 'Ürünler',      module: 'products' },
-  { to: '/bom',          icon: ClipboardList,   label: 'Reçeteler',    module: 'bom' },
-  { to: '/production',   icon: Factory,         label: 'Üretim',       module: 'production' },
-  { to: '/purchases',    icon: ShoppingBag,     label: 'Satın Alma',   module: 'purchases' },
-  { to: '/orders',       icon: ShoppingCart,    label: 'Siparişler',   module: 'orders' },
-  { to: '/customers',    icon: Users,           label: 'Müşteriler',   module: 'customers' },
-  { to: '/cashflow',     icon: Wallet,          label: 'Kasa / Ciro',  module: 'cashflow' },
-  { to: '/payments',     icon: CreditCard,      label: 'Vade Takibi',  module: 'payments' },
-  { to: '/debts',        icon: Landmark,        label: 'Borç Takibi',  module: 'debts' },
-  { to: '/suppliers',    icon: Truck,           label: 'Tedarikçiler', module: 'suppliers' },
-  { to: '/employees',    icon: UserCheck,       label: 'Personel',     module: 'employees' },
-  { to: '/reports',      icon: BarChart3,       label: 'Raporlar',     module: 'reports' },
-  { to: '/settings',     icon: Settings,        label: 'Ayarlar',      module: null },
+  { to: '/',          icon: LayoutDashboard, label: 'Dashboard',   module: null },
+  { to: '/products',  icon: Package,         label: 'Ürünler',     module: 'products' },
+  { to: '/customers', icon: Users,           label: 'Müşteriler',  module: 'customers' },
+  { to: '/orders',    icon: ShoppingCart,    label: 'Siparişler',  module: 'orders' },
+  { to: '/payments',  icon: CreditCard,      label: 'Vade Takibi', module: 'payments' },
+  { to: '/debts',     icon: Landmark,        label: 'Borç Takibi', module: 'debts' },
+  { to: '/employees', icon: UserCheck,       label: 'Personel',    module: 'employees' },
+  { to: '/reports',   icon: BarChart3,       label: 'Raporlar',    module: 'reports' },
+  { to: '/settings',  icon: Settings,        label: 'Ayarlar',     module: null },
 ]
 
 export default function Layout({ children }) {
