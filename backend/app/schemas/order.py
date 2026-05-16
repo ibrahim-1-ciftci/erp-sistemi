@@ -7,6 +7,7 @@ class OrderItemBase(BaseModel):
     product_id: int
     quantity: float
     unit_price: Optional[float] = None
+    unit: Optional[str] = None
 
 class OrderItemCreate(OrderItemBase):
     pass

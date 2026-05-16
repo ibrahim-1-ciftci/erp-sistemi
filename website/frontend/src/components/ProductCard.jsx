@@ -19,8 +19,7 @@ export default function ProductCard({ product }) {
   const handleAddToCart = (e) => {
     e.stopPropagation()
     cartStore.addItem(product)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 1500)
+    navigate('/odeme')
   }
 
   const name = lang === 'tr' ? product.name_tr : product.name_en

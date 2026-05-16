@@ -23,7 +23,9 @@ export default function Checkout() {
   useSEO({ title: lang === 'tr' ? 'Sipariş Ver' : 'Place Order' })
 
   useEffect(() => {
-    if (items.length === 0) navigate('/sepet')
+    const currentItems = cartStore.getItems()
+    if (currentItems.length === 0) navigate('/sepet')
+    else setItems(currentItems)
     api.get('/settings').then(r => setSettings(r.data)).catch(() => {})
   }, [])
 

@@ -6,7 +6,11 @@ import { useTheme, THEMES } from '../store/themeStore'
 import Modal from '../components/Modal'
 import { Save, KeyRound, Building2, Receipt, Users, Plus, Edit2, Trash2, ShieldCheck, ShieldOff, ShieldAlert, Palette, Shield, MonitorSmartphone } from 'lucide-react'
 
-const MODULE_LABELS = { raw_materials:'Hammaddeler', products:'Urunler', bom:'Receteler', production:'Uretim', orders:'Siparisler', customers:'Musteriler', payments:'Vade Takibi', debts:'Borc Takibi', cashflow:'Kasa/Ciro', purchases:'Satin Alma', suppliers:'Tedarikciler', reports:'Raporlar', settings:'Ayarlar' }
+const MODULE_LABELS = {
+  products:'Urunler', orders:'Siparisler', customers:'Musteriler',
+  payments:'Vade Takibi', debts:'Borc Takibi',
+  reports:'Raporlar', settings:'Ayarlar', employees:'Personel'
+}
 const ACTION_LABELS = { view:'Goruntule', create:'Ekle', edit:'Duzenle', delete:'Sil' }
 const ACTIONS = ['view','create','edit','delete']
 const SYSTEM_ROLES = [{ name:'user', label:'Kullanici (user)' }]

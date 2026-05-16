@@ -64,6 +64,7 @@ export default function App() {
       <Route path="/teslimat" element={<PublicLayout><Shipping /></PublicLayout>} />
       <Route path="/sepet" element={<PublicLayout><Cart /></PublicLayout>} />
       <Route path="/siparis" element={<PublicLayout><Checkout /></PublicLayout>} />
+      <Route path="/odeme" element={<PublicLayout><Checkout /></PublicLayout>} />
       <Route path="/siparis-tamamlandi" element={<PublicLayout><OrderSuccess /></PublicLayout>} />
 
       {/* Admin */}

@@ -20,8 +20,7 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     cartStore.addItem(product)
-    setAddedToCart(true)
-    setTimeout(() => setAddedToCart(false), 2000)
+    navigate('/odeme')
   }
 
   useEffect(() => {
