@@ -11,5 +11,7 @@ class ProductVariant(Base):
     price      = Column(Float, nullable=False)
     is_active  = Column(Boolean, default=True)
     sort_order = Column(Integer, default=0)
+    image_id   = Column(Integer, ForeignKey("product_images.id", ondelete="SET NULL"), nullable=True)
 
     product = relationship("Product", back_populates="variants")
+    image   = relationship("ProductImage", foreign_keys=[image_id])

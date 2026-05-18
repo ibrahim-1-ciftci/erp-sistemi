@@ -34,6 +34,11 @@ export default function ProductDetail() {
       // Varyant varsa ilkini seç
       if (r.data.variants && r.data.variants.length > 0) {
         setSelectedVariant(r.data.variants[0])
+        // İlk varyantın görseli varsa onu göster
+        if (r.data.variants[0].image_url) {
+          const imgIdx = (r.data.images || []).indexOf(r.data.variants[0].image_url)
+          if (imgIdx >= 0) setActiveImg(imgIdx)
+        }
       }
     }).catch(() => navigate('/urunler'))
     api.get('/settings').then(r => setSettings(r.data)).catch(() => {})
@@ -165,7 +170,15 @@ export default function ProductDetail() {
                   {product.variants.map(v => (
                     <button
                       key={v.id}
-                      onClick={() => setSelectedVariant(v)}
+                      onClick={() => {
+                        setSelectedVariant(v)
+                        // Varyantın görseli varsa o görsele geç
+                        if (v.image_url) {
+                          const idx = images.indexOf(v.image_url)
+                          if (idx >= 0) setActiveImg(idx)
+                          else setActiveImg(0)
+                        }
+                      }}
                       className={`px-4 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
                         selectedVariant?.id === v.id
                           ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/25'

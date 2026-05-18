@@ -28,7 +28,7 @@ export default function AdminProductForm() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('tr')
   const [variants, setVariants] = useState([])
-  const [variantForm, setVariantForm] = useState({ label: '', price: '' })
+  const [variantForm, setVariantForm] = useState({ label: '', price: '', image_id: '' })
 
   const dragIdx = useRef(null)
   const dragOverIdx = useRef(null)
@@ -63,7 +63,13 @@ export default function AdminProductForm() {
   // Varyant ekle
   const addVariant = async () => {
     if (!variantForm.label || !variantForm.price) return toast.error('Etiket ve fiyat zorunlu')
-    const newV = { label: variantForm.label, price: parseFloat(variantForm.price), is_active: true, sort_order: variants.length }
+    const newV = {
+      label: variantForm.label,
+      price: parseFloat(variantForm.price),
+      is_active: true,
+      sort_order: variants.length,
+      image_id: variantForm.image_id ? parseInt(variantForm.image_id) : null
+    }
     if (isEdit) {
       try {
         const res = await api.post(`/products/${id}/variants`, newV)
@@ -71,9 +77,11 @@ export default function AdminProductForm() {
         toast.success('Varyant eklendi')
       } catch { toast.error('Hata') }
     } else {
-      setVariants(prev => [...prev, { ...newV, _temp: true }])
+      // Görsel URL'sini de sakla (yeni ürün için)
+      const imgObj = existingImages.find(img => img.id === newV.image_id)
+      setVariants(prev => [...prev, { ...newV, _temp: true, image_url: imgObj?.image || null }])
     }
-    setVariantForm({ label: '', price: '' })
+    setVariantForm({ label: '', price: '', image_id: '' })
   }
 
   // Varyant sil
@@ -400,13 +408,17 @@ export default function AdminProductForm() {
               {variants.length > 0 && (
                 <div className="space-y-2">
                   {variants.map((v, i) => (
-                    <div key={v.id ?? i} className="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2">
-                      <div>
+                    <div key={v.id ?? i} className="flex items-center gap-2 bg-blue-50 rounded-xl px-3 py-2">
+                      {v.image_url && (
+                        <img src={v.image_url} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-blue-200" />
+                      )}
+                      <div className="flex-1 min-w-0">
                         <span className="text-sm font-semibold text-blue-800">{v.label}</span>
                         <span className="text-xs text-blue-600 ml-2">₺{v.price}</span>
+                        {!v.image_url && <span className="text-xs text-gray-400 ml-2">Görsel yok</span>}
                       </div>
                       <button type="button" onClick={() => removeVariant(v, i)}
-                        className="text-red-400 hover:text-red-600 p-1">
+                        className="text-red-400 hover:text-red-600 p-1 flex-shrink-0">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -414,21 +426,49 @@ export default function AdminProductForm() {
                 </div>
               )}
 
-              <div className="flex gap-2">
-                <input
-                  value={variantForm.label}
-                  onChange={e => setVariantForm(f => ({ ...f, label: e.target.value }))}
-                  placeholder="1 Litre, 5 Litre..."
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input
-                  type="number" step="0.01" min="0"
-                  value={variantForm.price}
-                  onChange={e => setVariantForm(f => ({ ...f, price: e.target.value }))}
-                  placeholder="₺"
-                  className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              {/* Yeni varyant formu */}
+              <div className="space-y-2 border border-dashed border-gray-200 rounded-xl p-3">
+                <div className="flex gap-2">
+                  <input
+                    value={variantForm.label}
+                    onChange={e => setVariantForm(f => ({ ...f, label: e.target.value }))}
+                    placeholder="1 Litre, 5 Litre..."
+                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input
+                    type="number" step="0.01" min="0"
+                    value={variantForm.price}
+                    onChange={e => setVariantForm(f => ({ ...f, price: e.target.value }))}
+                    placeholder="₺"
+                    className="w-24 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                {/* Görsel seçici — sadece mevcut görseller varsa göster */}
+                {existingImages.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1.5">Bu varyant için görsel seç (opsiyonel):</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setVariantForm(f => ({ ...f, image_id: '' }))}
+                        className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center text-xs transition-all ${!variantForm.image_id ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>
+                        —
+                      </button>
+                      {existingImages.map((img, i) => (
+                        <button
+                          key={img.id ?? i}
+                          type="button"
+                          onClick={() => setVariantForm(f => ({ ...f, image_id: img.id ? String(img.id) : '' }))}
+                          className={`w-10 h-10 rounded-lg border-2 overflow-hidden transition-all ${String(variantForm.image_id) === String(img.id) ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-300'}`}>
+                          <img src={img.image} alt="" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <button type="button" onClick={addVariant}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl transition-colors">
-                  <Plus size={16} />
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-medium transition-colors">
+                  <Plus size={15} /> Varyant Ekle
                 </button>
               </div>
               <p className="text-xs text-gray-400">Varyant eklenince müşteri sitede hacim seçebilir</p>

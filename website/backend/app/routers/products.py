@@ -29,7 +29,9 @@ def product_to_dict(p: Product) -> dict:
     if hasattr(p, 'variants') and p.variants:
         variants = [
             {"id": v.id, "label": v.label, "price": v.price,
-             "is_active": v.is_active, "sort_order": v.sort_order}
+             "is_active": v.is_active, "sort_order": v.sort_order,
+             "image_id": v.image_id,
+             "image_url": v.image.image if v.image else None}
             for v in p.variants if v.is_active
         ]
 
@@ -268,6 +270,7 @@ class VariantIn(PydanticBase):
     price: float
     is_active: bool = True
     sort_order: int = 0
+    image_id: Optional[int] = None
 
 @router.get("/{id}/variants")
 def get_variants(id: int, db: Session = Depends(get_db)):
@@ -276,7 +279,9 @@ def get_variants(id: int, db: Session = Depends(get_db)):
         ProductVariant.product_id == id
     ).order_by(ProductVariant.sort_order).all()
     return [{"id": v.id, "label": v.label, "price": v.price,
-             "is_active": v.is_active, "sort_order": v.sort_order} for v in variants]
+             "is_active": v.is_active, "sort_order": v.sort_order,
+             "image_id": v.image_id,
+             "image_url": v.image.image if v.image else None} for v in variants]
 
 @router.post("/{id}/variants")
 def create_variant(id: int, data: VariantIn, db: Session = Depends(get_db), _=Depends(get_current_admin)):
@@ -286,7 +291,9 @@ def create_variant(id: int, data: VariantIn, db: Session = Depends(get_db), _=De
     v = ProductVariant(product_id=id, **data.dict())
     db.add(v); db.commit(); db.refresh(v)
     return {"id": v.id, "label": v.label, "price": v.price,
-            "is_active": v.is_active, "sort_order": v.sort_order}
+            "is_active": v.is_active, "sort_order": v.sort_order,
+            "image_id": v.image_id,
+            "image_url": v.image.image if v.image else None}
 
 @router.put("/{id}/variants/{vid}")
 def update_variant(id: int, vid: int, data: VariantIn, db: Session = Depends(get_db), _=Depends(get_current_admin)):
@@ -297,7 +304,9 @@ def update_variant(id: int, vid: int, data: VariantIn, db: Session = Depends(get
         setattr(v, k, val)
     db.commit(); db.refresh(v)
     return {"id": v.id, "label": v.label, "price": v.price,
-            "is_active": v.is_active, "sort_order": v.sort_order}
+            "is_active": v.is_active, "sort_order": v.sort_order,
+            "image_id": v.image_id,
+            "image_url": v.image.image if v.image else None}
 
 @router.delete("/{id}/variants/{vid}")
 def delete_variant(id: int, vid: int, db: Session = Depends(get_db), _=Depends(get_current_admin)):
