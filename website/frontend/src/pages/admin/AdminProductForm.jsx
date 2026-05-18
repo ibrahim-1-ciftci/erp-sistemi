@@ -401,61 +401,6 @@ export default function AdminProductForm() {
               </div>
             </div>
 
-            {/* Fiyat Ayarları */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-              <h3 className="font-semibold text-gray-900">Varsayılan Fiyat</h3>
-              <p className="text-xs text-gray-400 -mt-2">Varyant yoksa bu fiyat gösterilir</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Normal Fiyat (₺)</label>
-                  <input type="number" step="0.01" min="0" value={form.price}
-                    onChange={e => f('price', e.target.value)} placeholder="0.00"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">İndirimli (₺)</label>
-                  <input type="number" step="0.01" min="0" value={form.price_discounted}
-                    onChange={e => f('price_discounted', e.target.value)} placeholder="0.00"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Birim</label>
-                  <select value={form.price_unit} onChange={e => f('price_unit', e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="adet">Adet</option>
-                    <option value="kg">Kg</option>
-                    <option value="lt">Litre</option>
-                    <option value="paket">Paket</option>
-                    <option value="koli">Koli</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Min. Sipariş</label>
-                  <input type="number" min="1" value={form.min_order_qty}
-                    onChange={e => f('min_order_qty', e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Fiyat Notu (TR)</label>
-                <input value={form.price_note_tr} onChange={e => f('price_note_tr', e.target.value)}
-                  placeholder="KDV dahil..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div className="flex items-center justify-between py-2 border-t border-gray-100">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Fiyatı Göster</p>
-                  <p className="text-xs text-gray-400">Sitede fiyat görünsün mü?</p>
-                </div>
-                <button type="button" onClick={() => f('show_price', !form.show_price)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${form.show_price ? 'bg-blue-600' : 'bg-gray-200'}`}>
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.show_price ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-              </div>
-            </div>
-
             {/* Varyantlar */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
               <div>
