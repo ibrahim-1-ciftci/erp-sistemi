@@ -237,7 +237,6 @@ export default function ProductDetail() {
                 )}
               </div>
             )}
-            )}
 
             {/* Özellik rozetleri */}
             <div className="flex flex-wrap gap-2 mb-6">
