@@ -167,73 +167,62 @@ export default function ProductDetail() {
                   {lang === 'tr' ? 'Hacim / Miktar Seçin:' : 'Select Volume / Quantity:'}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {product.variants.map(v => (
-                    <button
-                      key={v.id}
-                      onClick={() => {
-                        setSelectedVariant(v)
-                        // Varyantın görseli varsa o görsele geç
-                        if (v.image_url) {
-                          const idx = images.indexOf(v.image_url)
-                          if (idx >= 0) setActiveImg(idx)
-                          else setActiveImg(0)
-                        }
-                      }}
-                      className={`px-4 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
-                        selectedVariant?.id === v.id
-                          ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/25'
-                          : 'border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600'
-                      }`}>
-                      {v.label}
-                      <span className={`ml-1.5 text-xs ${selectedVariant?.id === v.id ? 'text-blue-100' : 'text-gray-400'}`}>
-                        ₺{v.price.toLocaleString('tr-TR')}
-                      </span>
-                    </button>
-                  ))}
+                  {product.variants.map(v => {
+                    const hasDiscount = v.price_discounted && v.price_discounted < v.price
+                    const displayPrice = hasDiscount ? v.price_discounted : v.price
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          setSelectedVariant(v)
+                          if (v.image_url) {
+                            const idx = images.indexOf(v.image_url)
+                            setActiveImg(idx >= 0 ? idx : 0)
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
+                          selectedVariant?.id === v.id
+                            ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                            : 'border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600'
+                        }`}>
+                        {v.label}
+                        <span className={`ml-1.5 text-xs ${selectedVariant?.id === v.id ? 'text-blue-100' : 'text-gray-400'}`}>
+                          ₺{displayPrice.toLocaleString('tr-TR')}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
-                {selectedVariant && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded-xl">
-                    <span className="text-2xl font-black text-blue-600">
-                      {selectedVariant.price.toLocaleString('tr-TR')} ₺
-                    </span>
-                    <span className="text-sm text-gray-500 ml-2">/ {selectedVariant.label}</span>
-                  </div>
-                )}
-              </div>
-            )}
 
-            {/* Varsayılan fiyat — varyant yoksa göster */}
-            {(!product.variants || product.variants.length === 0) && product.show_price && product.price && product.price > 0 && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
-                <div className="flex items-end gap-3">
-                  {product.price_discounted && product.price_discounted < product.price ? (
-                    <>
-                      <span className="text-3xl font-black text-blue-600">
-                        {product.price_discounted.toLocaleString('tr-TR')} ₺
-                      </span>
-                      <span className="text-lg text-gray-400 line-through">
-                        {product.price.toLocaleString('tr-TR')} ₺
-                      </span>
-                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
-                        %{product.discount_percent} İNDİRİM
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-3xl font-black text-blue-600">
-                      {product.price.toLocaleString('tr-TR')} ₺
-                    </span>
-                  )}
-                  <span className="text-sm text-gray-400 mb-1">/ {product.price_unit || 'adet'}</span>
-                </div>
-                {product.min_order_qty > 1 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {lang === 'tr' ? `Min. sipariş: ${product.min_order_qty} ${product.price_unit}` : `Min. order: ${product.min_order_qty} ${product.price_unit}`}
-                  </p>
-                )}
-                {(lang === 'tr' ? product.price_note_tr : product.price_note_en) && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {lang === 'tr' ? product.price_note_tr : product.price_note_en}
-                  </p>
+                {/* Seçili varyant fiyat detayı */}
+                {selectedVariant && (
+                  <div className="mt-3 p-4 bg-blue-50 rounded-xl">
+                    <div className="flex items-end gap-3 flex-wrap">
+                      {selectedVariant.price_discounted && selectedVariant.price_discounted < selectedVariant.price ? (
+                        <>
+                          <span className="text-3xl font-black text-blue-600">
+                            {selectedVariant.price_discounted.toLocaleString('tr-TR')} ₺
+                          </span>
+                          <span className="text-lg text-gray-400 line-through">
+                            {selectedVariant.price.toLocaleString('tr-TR')} ₺
+                          </span>
+                          <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
+                            %{selectedVariant.discount_percent || Math.round((1 - selectedVariant.price_discounted / selectedVariant.price) * 100)} İNDİRİM
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-3xl font-black text-blue-600">
+                          {selectedVariant.price.toLocaleString('tr-TR')} ₺
+                        </span>
+                      )}
+                      <span className="text-sm text-gray-500 mb-1">/ {selectedVariant.label}</span>
+                    </div>
+                    {(lang === 'tr' ? selectedVariant.price_note_tr : selectedVariant.price_note_en) && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {lang === 'tr' ? selectedVariant.price_note_tr : selectedVariant.price_note_en}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}

@@ -29,6 +29,10 @@ def product_to_dict(p: Product) -> dict:
     if hasattr(p, 'variants') and p.variants:
         variants = [
             {"id": v.id, "label": v.label, "price": v.price,
+             "price_discounted": v.price_discounted,
+             "discount_percent": v.discount_percent,
+             "price_note_tr": v.price_note_tr or "",
+             "price_note_en": v.price_note_en or "",
              "is_active": v.is_active, "sort_order": v.sort_order,
              "image_id": v.image_id,
              "image_url": v.image.image if v.image else None}
@@ -268,9 +272,25 @@ from pydantic import BaseModel as PydanticBase
 class VariantIn(PydanticBase):
     label: str
     price: float
+    price_discounted: Optional[float] = None
+    discount_percent: Optional[int] = None
+    price_note_tr: Optional[str] = ""
+    price_note_en: Optional[str] = ""
     is_active: bool = True
     sort_order: int = 0
     image_id: Optional[int] = None
+
+def _variant_dict(v):
+    return {
+        "id": v.id, "label": v.label, "price": v.price,
+        "price_discounted": v.price_discounted,
+        "discount_percent": v.discount_percent,
+        "price_note_tr": v.price_note_tr or "",
+        "price_note_en": v.price_note_en or "",
+        "is_active": v.is_active, "sort_order": v.sort_order,
+        "image_id": v.image_id,
+        "image_url": v.image.image if v.image else None
+    }
 
 @router.get("/{id}/variants")
 def get_variants(id: int, db: Session = Depends(get_db)):
@@ -278,10 +298,7 @@ def get_variants(id: int, db: Session = Depends(get_db)):
     variants = db.query(ProductVariant).filter(
         ProductVariant.product_id == id
     ).order_by(ProductVariant.sort_order).all()
-    return [{"id": v.id, "label": v.label, "price": v.price,
-             "is_active": v.is_active, "sort_order": v.sort_order,
-             "image_id": v.image_id,
-             "image_url": v.image.image if v.image else None} for v in variants]
+    return [_variant_dict(v) for v in variants]
 
 @router.post("/{id}/variants")
 def create_variant(id: int, data: VariantIn, db: Session = Depends(get_db), _=Depends(get_current_admin)):
@@ -290,10 +307,7 @@ def create_variant(id: int, data: VariantIn, db: Session = Depends(get_db), _=De
     if not p: raise HTTPException(404, "Ürün bulunamadı")
     v = ProductVariant(product_id=id, **data.dict())
     db.add(v); db.commit(); db.refresh(v)
-    return {"id": v.id, "label": v.label, "price": v.price,
-            "is_active": v.is_active, "sort_order": v.sort_order,
-            "image_id": v.image_id,
-            "image_url": v.image.image if v.image else None}
+    return _variant_dict(v)
 
 @router.put("/{id}/variants/{vid}")
 def update_variant(id: int, vid: int, data: VariantIn, db: Session = Depends(get_db), _=Depends(get_current_admin)):
@@ -303,10 +317,18 @@ def update_variant(id: int, vid: int, data: VariantIn, db: Session = Depends(get
     for k, val in data.dict().items():
         setattr(v, k, val)
     db.commit(); db.refresh(v)
-    return {"id": v.id, "label": v.label, "price": v.price,
-            "is_active": v.is_active, "sort_order": v.sort_order,
-            "image_id": v.image_id,
-            "image_url": v.image.image if v.image else None}
+    return _variant_dict(v)
+
+@router.post("/{id}/variants/reorder")
+def reorder_variants(id: int, order: list[int], db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    """Varyant sırasını güncelle. order = [variant_id, ...] sıralı liste"""
+    from ..models.product_variant import ProductVariant
+    for i, vid in enumerate(order):
+        db.query(ProductVariant).filter(
+            ProductVariant.id == vid, ProductVariant.product_id == id
+        ).update({"sort_order": i})
+    db.commit()
+    return {"ok": True}
 
 @router.delete("/{id}/variants/{vid}")
 def delete_variant(id: int, vid: int, db: Session = Depends(get_db), _=Depends(get_current_admin)):

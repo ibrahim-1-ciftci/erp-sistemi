@@ -95,7 +95,25 @@ export default function ProductCard({ product }) {
       <div className="p-5">
         <h3 className="font-bold text-gray-900 text-base mb-1 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2">{name}</h3>
         {desc && <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{desc}</p>}
-        {product.show_price && product.price > 0 && (
+
+        {/* Varyant varsa ilk varyantın fiyatını göster */}
+        {product.variants && product.variants.length > 0 ? (
+          <div className="flex items-center gap-2 mt-2">
+            {(() => {
+              const v = product.variants[0]
+              const hasDiscount = v.price_discounted && v.price_discounted < v.price
+              return hasDiscount ? (
+                <>
+                  <span className="text-sm font-bold text-blue-600">{v.price_discounted.toLocaleString('tr-TR')} ₺</span>
+                  <span className="text-xs text-gray-400 line-through">{v.price.toLocaleString('tr-TR')} ₺</span>
+                </>
+              ) : (
+                <span className="text-sm font-bold text-blue-600">{v.price.toLocaleString('tr-TR')} ₺</span>
+              )
+            })()}
+            <span className="text-xs text-gray-400">/ {product.variants[0].label}</span>
+          </div>
+        ) : product.show_price && product.price > 0 ? (
           <div className="flex items-center gap-2 mt-2">
             {product.price_discounted && product.price_discounted < product.price ? (
               <>
@@ -107,7 +125,7 @@ export default function ProductCard({ product }) {
             )}
             <span className="text-xs text-gray-400">/ {product.price_unit || 'adet'}</span>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )
