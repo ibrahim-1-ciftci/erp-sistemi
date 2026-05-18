@@ -17,14 +17,25 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true)
   const [lightbox, setLightbox] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
+  const [selectedVariant, setSelectedVariant] = useState(null)
 
   const handleAddToCart = () => {
-    cartStore.addItem(product)
+    const itemToAdd = selectedVariant
+      ? { ...product, price: selectedVariant.price, variantLabel: selectedVariant.label }
+      : product
+    cartStore.addItem(itemToAdd)
     navigate('/odeme')
   }
 
   useEffect(() => {
-    api.get(`/products/${id}`).then(r => { setProduct(r.data); setLoading(false) }).catch(() => navigate('/urunler'))
+    api.get(`/products/${id}`).then(r => {
+      setProduct(r.data)
+      setLoading(false)
+      // Varyant varsa ilkini seç
+      if (r.data.variants && r.data.variants.length > 0) {
+        setSelectedVariant(r.data.variants[0])
+      }
+    }).catch(() => navigate('/urunler'))
     api.get('/settings').then(r => setSettings(r.data)).catch(() => {})
   }, [id])
 
@@ -144,8 +155,42 @@ export default function ProductDetail() {
               <div className="text-gray-600 leading-relaxed text-base mb-6 border-l-4 border-blue-100 pl-4 rich-content" dangerouslySetInnerHTML={{ __html: summary }} />
             )}
 
-            {/* Fiyat gösterimi */}
-            {product.show_price && product.price && product.price > 0 && (
+            {/* Varyant seçici — varsa göster */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="mb-6">
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  {lang === 'tr' ? 'Hacim / Miktar Seçin:' : 'Select Volume / Quantity:'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {product.variants.map(v => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariant(v)}
+                      className={`px-4 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
+                        selectedVariant?.id === v.id
+                          ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                          : 'border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600'
+                      }`}>
+                      {v.label}
+                      <span className={`ml-1.5 text-xs ${selectedVariant?.id === v.id ? 'text-blue-100' : 'text-gray-400'}`}>
+                        ₺{v.price.toLocaleString('tr-TR')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {selectedVariant && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded-xl">
+                    <span className="text-2xl font-black text-blue-600">
+                      {selectedVariant.price.toLocaleString('tr-TR')} ₺
+                    </span>
+                    <span className="text-sm text-gray-500 ml-2">/ {selectedVariant.label}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Varsayılan fiyat — varyant yoksa göster */}
+            {(!product.variants || product.variants.length === 0) && product.show_price && product.price && product.price > 0 && (
               <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
                 <div className="flex items-end gap-3">
                   {product.price_discounted && product.price_discounted < product.price ? (
@@ -179,10 +224,6 @@ export default function ProductDetail() {
                 )}
               </div>
             )}
-            {product.show_price === false && (
-              <div className="mb-6 p-3 bg-blue-50 rounded-xl text-sm text-blue-700">
-                {lang === 'tr' ? 'Fiyat bilgisi için bizimle iletişime geçin.' : 'Contact us for pricing information.'}
-              </div>
             )}
 
             {/* Özellik rozetleri */}

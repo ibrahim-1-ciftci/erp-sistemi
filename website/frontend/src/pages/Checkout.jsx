@@ -55,7 +55,7 @@ export default function Checkout() {
       // Havale
       await api.post('/orders', {
         customer: form,
-        items: items.map(i => ({ product_id: i.id, name: lang === 'tr' ? i.name_tr : i.name_en, qty: i.qty, price: i.price })),
+        items: items.map(i => ({ product_id: i.id, name: (lang === 'tr' ? i.name_tr : i.name_en) + (i.variantLabel ? ` (${i.variantLabel})` : ''), qty: i.qty, price: i.price })),
         payment_method: paymentMethod,
         total: cartStore.getTotal(),
         lang,

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from .core.database import Base, engine
-from .models import admin, category, product, product_image, contact, setting, blog, order as order_model
+from .models import admin, category, product, product_image, contact, setting, blog, order as order_model, product_variant
 from .routers import auth, categories, products, contact as contact_router, settings as settings_router, blog as blog_router, chat as chat_router, orders as orders_router, sitemap as sitemap_router, payment as payment_router
 
 Base.metadata.create_all(bind=engine)

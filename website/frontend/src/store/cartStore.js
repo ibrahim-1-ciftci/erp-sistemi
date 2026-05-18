@@ -15,7 +15,9 @@ export const cartStore = {
 
   addItem(product, qty = 1) {
     const items = getCart()
-    const existing = items.find(i => i.id === product.id)
+    // Varyant varsa aynı ürün + aynı varyant kombinasyonunu bul
+    const variantLabel = product.variantLabel || null
+    const existing = items.find(i => i.id === product.id && i.variantLabel === variantLabel)
     if (existing) {
       existing.qty += qty
     } else {
@@ -25,6 +27,7 @@ export const cartStore = {
         name_en: product.name_en,
         image: product.image,
         price: product.price || 0,
+        variantLabel,
         qty,
       })
     }
@@ -33,6 +36,10 @@ export const cartStore = {
 
   removeItem(id) {
     saveCart(getCart().filter(i => i.id !== id))
+  },
+
+  removeItemByVariant(id, variantLabel) {
+    saveCart(getCart().filter(i => !(i.id === id && i.variantLabel === variantLabel)))
   },
 
   updateQty(id, qty) {

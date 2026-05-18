@@ -19,8 +19,23 @@ export default function Cart() {
     return () => window.removeEventListener('cart-updated', handler)
   }, [])
 
-  const updateQty = (id, qty) => { cartStore.updateQty(id, qty); setItems(cartStore.getItems()) }
-  const remove = (id) => { cartStore.removeItem(id); setItems(cartStore.getItems()) }
+  const updateQty = (id, variantLabel, qty) => {
+    const items = cartStore.getItems()
+    const item = items.find(i => i.id === id && i.variantLabel === variantLabel)
+    if (!item) return
+    if (qty <= 0) {
+      cartStore.removeItemByVariant(id, variantLabel)
+    } else {
+      item.qty = qty
+      localStorage.setItem('laves_cart', JSON.stringify(items))
+      window.dispatchEvent(new Event('cart-updated'))
+    }
+    setItems(cartStore.getItems())
+  }
+  const remove = (id, variantLabel) => {
+    cartStore.removeItemByVariant(id, variantLabel)
+    setItems(cartStore.getItems())
+  }
 
   if (items.length === 0) {
     return (
@@ -68,6 +83,11 @@ export default function Cart() {
                     <Link to={`/urun/${item.id}`} className="font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-1">
                       {name}
                     </Link>
+                    {item.variantLabel && (
+                      <span className="inline-block text-xs bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-full mt-0.5">
+                        {item.variantLabel}
+                      </span>
+                    )}
                     {item.price > 0 && (
                       <p className="text-sm text-blue-600 font-bold mt-0.5">
                         {(item.price * item.qty).toLocaleString('tr-TR')} ₺
@@ -75,17 +95,17 @@ export default function Cart() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={() => updateQty(item.id, item.qty - 1)}
+                    <button onClick={() => updateQty(item.id, item.variantLabel, item.qty - 1)}
                       className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
                       <Minus size={12} />
                     </button>
                     <span className="w-8 text-center text-sm font-semibold">{item.qty}</span>
-                    <button onClick={() => updateQty(item.id, item.qty + 1)}
+                    <button onClick={() => updateQty(item.id, item.variantLabel, item.qty + 1)}
                       className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
                       <Plus size={12} />
                     </button>
                   </div>
-                  <button onClick={() => remove(item.id)}
+                  <button onClick={() => remove(item.id, item.variantLabel)}
                     className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors flex-shrink-0">
                     <Trash2 size={16} />
                   </button>

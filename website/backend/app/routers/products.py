@@ -24,6 +24,15 @@ def product_to_dict(p: Product) -> dict:
         elif p.discount_percent and p.discount_percent > 0:
             effective_discount = p.discount_percent
 
+    # Varyantlar
+    variants = []
+    if hasattr(p, 'variants') and p.variants:
+        variants = [
+            {"id": v.id, "label": v.label, "price": v.price,
+             "is_active": v.is_active, "sort_order": v.sort_order}
+            for v in p.variants if v.is_active
+        ]
+
     return {
         "id": p.id,
         "name_tr": p.name_tr,
@@ -46,6 +55,7 @@ def product_to_dict(p: Product) -> dict:
         "show_price": p.show_price if p.show_price is not None else True,
         "price_note_tr": p.price_note_tr or "",
         "price_note_en": p.price_note_en or "",
+        "variants": variants,
         "category": {"id": p.category.id, "name_tr": p.category.name_tr, "name_en": p.category.name_en} if p.category else None
     }
 
@@ -246,4 +256,53 @@ def delete_product(id: int, db: Session = Depends(get_db), _=Depends(get_current
         raise HTTPException(404, "Not found")
     db.delete(p)
     db.commit()
+    return {"ok": True}
+
+
+# ── Varyant Yönetimi ──────────────────────────────────────────────────────
+
+from pydantic import BaseModel as PydanticBase
+
+class VariantIn(PydanticBase):
+    label: str
+    price: float
+    is_active: bool = True
+    sort_order: int = 0
+
+@router.get("/{id}/variants")
+def get_variants(id: int, db: Session = Depends(get_db)):
+    from ..models.product_variant import ProductVariant
+    variants = db.query(ProductVariant).filter(
+        ProductVariant.product_id == id
+    ).order_by(ProductVariant.sort_order).all()
+    return [{"id": v.id, "label": v.label, "price": v.price,
+             "is_active": v.is_active, "sort_order": v.sort_order} for v in variants]
+
+@router.post("/{id}/variants")
+def create_variant(id: int, data: VariantIn, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    from ..models.product_variant import ProductVariant
+    p = db.query(Product).filter(Product.id == id).first()
+    if not p: raise HTTPException(404, "Ürün bulunamadı")
+    v = ProductVariant(product_id=id, **data.dict())
+    db.add(v); db.commit(); db.refresh(v)
+    return {"id": v.id, "label": v.label, "price": v.price,
+            "is_active": v.is_active, "sort_order": v.sort_order}
+
+@router.put("/{id}/variants/{vid}")
+def update_variant(id: int, vid: int, data: VariantIn, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    from ..models.product_variant import ProductVariant
+    v = db.query(ProductVariant).filter(ProductVariant.id == vid, ProductVariant.product_id == id).first()
+    if not v: raise HTTPException(404, "Varyant bulunamadı")
+    for k, val in data.dict().items():
+        setattr(v, k, val)
+    db.commit(); db.refresh(v)
+    return {"id": v.id, "label": v.label, "price": v.price,
+            "is_active": v.is_active, "sort_order": v.sort_order}
+
+@router.delete("/{id}/variants/{vid}")
+def delete_variant(id: int, vid: int, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    from ..models.product_variant import ProductVariant
+    v = db.query(ProductVariant).filter(ProductVariant.id == vid, ProductVariant.product_id == id).first()
+    if not v: raise HTTPException(404, "Varyant bulunamadı")
+    db.delete(v); db.commit()
     return {"ok": True}
