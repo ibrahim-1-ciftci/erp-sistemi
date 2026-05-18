@@ -64,6 +64,23 @@ def create_order(req: CreateOrderRequest, db: Session = Depends(get_db)):
     db.add(order)
     db.commit()
     db.refresh(order)
+
+    # Mail bildirimleri (hata olsa bile sipariş kaydedildi)
+    try:
+        from ..core.mail import send_email, mail_order_received, mail_admin_new_order
+        from ..core.config import settings as cfg
+        # Müşteriye
+        if order.customer_email:
+            subj, body = mail_order_received(order, req.lang)
+            send_email(order.customer_email, subj, body)
+        # Admin'e
+        if cfg.MAIL_TO:
+            subj, body = mail_admin_new_order(order)
+            send_email(cfg.MAIL_TO, subj, body)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Mail hatası: {e}")
+
     return {"id": order.id, "status": "ok"}
 
 @router.get("")
@@ -89,8 +106,20 @@ def update_status(id: int, body: dict, db: Session = Depends(get_db), _=Depends(
     o = db.query(WebOrder).filter(WebOrder.id == id).first()
     if not o:
         raise HTTPException(404, "Not found")
+    old_status = o.status
     o.status = body.get("status", o.status)
     db.commit()
+
+    # Kargoya verildi → müşteriye mail
+    if o.status == "shipped" and old_status != "shipped" and o.customer_email:
+        try:
+            from ..core.mail import send_email, mail_order_shipped
+            subj, html = mail_order_shipped(o, o.lang or "tr")
+            send_email(o.customer_email, subj, html)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Kargo mail hatası: {e}")
+
     return {"ok": True}
 
 @router.delete("/{id}")

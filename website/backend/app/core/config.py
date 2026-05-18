@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     PAYTR_MERCHANT_KEY: str = ""
     PAYTR_MERCHANT_SALT: str = ""
     SITE_URL: str = "https://laveskimya.com"
+    MAIL_FROM: str = ""
+    MAIL_PASSWORD: str = ""
+    MAIL_TO: str = ""
 
     class Config:
         env_file = ".env"

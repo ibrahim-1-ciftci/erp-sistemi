@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Eye, Trash2, X, Package, Phone, Mail, MapPin, CreditCard, Banknote, ShoppingBag } from 'lucide-react'
+import { Eye, Trash2, X, Package, Phone, Mail, MapPin, CreditCard, Banknote, ShoppingBag, Truck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
@@ -244,15 +244,21 @@ export default function AdminOrders() {
 
               {/* Aksiyonlar */}
               <div className="flex gap-3 pt-2">
+                {selected.status !== 'shipped' && selected.status !== 'delivered' && (
+                  <button onClick={() => updateStatus(selected.id, 'shipped')}
+                    className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                    <Truck size={15} /> Kargoya Ver (Mail Gönder)
+                  </button>
+                )}
                 {selected.customer_email && (
                   <a href={`mailto:${selected.customer_email}?subject=Siparişiniz Hakkında - #${selected.id}`}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
-                    <Mail size={15} /> E-posta Gönder
+                    className="flex items-center justify-center gap-2 border border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors">
+                    <Mail size={15} />
                   </a>
                 )}
                 <button onClick={() => handleDelete(selected.id)}
                   className="flex items-center justify-center gap-2 border border-red-200 text-red-500 hover:bg-red-50 font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors">
-                  <Trash2 size={15} /> Sil
+                  <Trash2 size={15} />
                 </button>
               </div>
             </div>
