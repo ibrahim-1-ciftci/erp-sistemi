@@ -60,13 +60,13 @@ def start_payment(data: PaymentRequest, request: Request, db: Session = Depends(
     merchant_notify_url = f"{base_url}/api/payment/notify"
 
     currency    = "TL"
-    test_mode   = "1"   # Canlıya geçince "0" yap
+    test_mode   = "0"   # Canlı mod
     no_installment = "0"
     max_installment = "0"
     lang_code   = "tr" if data.lang == "tr" else "en"
-    debug_on    = "1"
+    debug_on    = "0"
 
-    # Hash oluştur
+    # Hash oluştur — PayTR dokümantasyonuna göre
     hash_str = (
         merchant_id + user_ip + order_id + data.email + str(amount) +
         basket_encoded + no_installment + max_installment + currency + test_mode + merchant_salt
@@ -104,7 +104,10 @@ def start_payment(data: PaymentRequest, request: Request, db: Session = Depends(
         raise HTTPException(500, f"PayTR bağlantı hatası: {str(e)}")
 
     if result.get("status") != "success":
-        raise HTTPException(400, f"PayTR hatası: {result.get('reason', 'Bilinmeyen hata')}")
+        # Detaylı hata logla
+        import logging
+        logging.error(f"PayTR hata: {result}")
+        raise HTTPException(400, f"PayTR hatası: {result.get('reason', str(result))}")
 
     return {
         "token": result["token"],
