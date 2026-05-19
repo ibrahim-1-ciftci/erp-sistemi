@@ -19,7 +19,7 @@ export default function ProductCard({ product }) {
   const handleAddToCart = (e) => {
     e.stopPropagation()
     cartStore.addItem(product)
-    navigate('/odeme')
+    navigate('/sepet')
   }
 
   const name = lang === 'tr' ? product.name_tr : product.name_en

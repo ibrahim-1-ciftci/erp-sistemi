@@ -24,7 +24,7 @@ export default function ProductDetail() {
       ? { ...product, price: selectedVariant.price, variantLabel: selectedVariant.label }
       : product
     cartStore.addItem(itemToAdd)
-    navigate('/odeme')
+    navigate('/sepet')
   }
 
   useEffect(() => {
