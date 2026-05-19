@@ -139,7 +139,7 @@ export default function Cart() {
 
             <div className="bg-blue-50 rounded-2xl p-4 text-xs text-blue-700 space-y-1">
               <p>✓ {lang === 'tr' ? 'Güvenli ödeme' : 'Secure payment'}</p>
-              <p>✓ {lang === 'tr' ? '14 gün iade garantisi' : '14-day return guarantee'}</p>
+              <p>✓ {lang === 'tr' ? '5 gün iade garantisi' : '5-day return guarantee'}</p>
               <p>✓ {lang === 'tr' ? '3-7 iş günü teslimat' : '3-7 business days delivery'}</p>
             </div>
           </div>
