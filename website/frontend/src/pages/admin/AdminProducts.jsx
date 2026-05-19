@@ -149,7 +149,25 @@ export default function AdminProducts() {
                   {p.category?.name_tr || <span className="text-gray-300">—</span>}
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell">
-                  {p.show_price && p.price > 0 ? (
+                  {p.variants && p.variants.length > 0 ? (
+                    <div>
+                      {(() => {
+                        const v = p.variants[0]
+                        const hasDiscount = v.price_discounted && v.price_discounted < v.price
+                        return hasDiscount ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-blue-600">{v.price_discounted.toLocaleString('tr-TR')} ₺</span>
+                            <span className="text-xs text-gray-400 line-through">{v.price.toLocaleString('tr-TR')} ₺</span>
+                          </div>
+                        ) : (
+                          <span className="font-semibold text-blue-600">{v.price.toLocaleString('tr-TR')} ₺</span>
+                        )
+                      })()}
+                      <p className="text-xs text-gray-400">/ {p.variants[0].label}
+                        {p.variants.length > 1 && <span className="ml-1 text-gray-300">+{p.variants.length - 1}</span>}
+                      </p>
+                    </div>
+                  ) : p.show_price && p.price > 0 ? (
                     <div>
                       {p.price_discounted && p.price_discounted < p.price ? (
                         <div className="flex items-center gap-1.5">
@@ -162,7 +180,7 @@ export default function AdminProducts() {
                       <p className="text-xs text-gray-400">/ {p.price_unit || 'adet'}</p>
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-300">Fiyat gizli</span>
+                    <span className="text-xs text-gray-300">—</span>
                   )}
                 </td>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
