@@ -12,6 +12,7 @@ import Customers from './pages/Customers'
 import Payments from './pages/Payments'
 import Debts from './pages/Debts'
 import Settings from './pages/Settings'
+import Trade from './pages/Trade'
 import Employees from './pages/Employees'
 
 function PrivateRoute({ children }) {
@@ -32,6 +33,7 @@ function AppRoutes() {
       <Route path="/debts" element={<PrivateRoute><Debts /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
       <Route path="/employees" element={<PrivateRoute><Employees /></PrivateRoute>} />
+      <Route path="/trade" element={<PrivateRoute><Trade /></PrivateRoute>} />
       <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
       {/* Eski URL'lere gelen istekleri dashboard'a yönlendir */}
       <Route path="/raw-materials" element={<Navigate to="/" />} />

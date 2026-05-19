@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
 import app.models  # noqa: F401 - tüm modelleri yükle
 
-from app.routers import auth, suppliers, raw_materials, products, bom, production, orders, reports, invoice, customers, payments, settings as settings_router, exports, debts, purchases, cashflow as cashflow_router, employees as employees_router, delivery_note as delivery_note_router
+from app.routers import auth, suppliers, raw_materials, products, bom, production, orders, reports, invoice, customers, payments, settings as settings_router, exports, debts, purchases, cashflow as cashflow_router, employees as employees_router, delivery_note as delivery_note_router, trade as trade_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -38,6 +38,7 @@ app.include_router(purchases.router, prefix="/api")
 app.include_router(cashflow_router.router, prefix="/api")
 app.include_router(employees_router.router, prefix="/api")
 app.include_router(delivery_note_router.router, prefix="/api")
+app.include_router(trade_router.router, prefix="/api")
 
 
 # ── Otomatik log temizleme (15 günden eski kayıtlar) ──────────────────────

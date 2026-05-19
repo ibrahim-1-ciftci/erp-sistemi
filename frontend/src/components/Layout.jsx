@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../store/authStore'
 import {
   LayoutDashboard, Package,
-  ShoppingCart, BarChart3, LogOut, Users, CreditCard, Settings, Landmark, UserCheck, Menu, X
+  ShoppingCart, BarChart3, LogOut, Users, CreditCard, Settings, Landmark, UserCheck, Menu, X, Store
 } from 'lucide-react'
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { to: '/products',  icon: Package,         label: 'Ürünler',     module: 'products' },
   { to: '/customers', icon: Users,           label: 'Müşteriler',  module: 'customers' },
   { to: '/orders',    icon: ShoppingCart,    label: 'Siparişler',  module: 'orders' },
+  { to: '/trade',     icon: Store,           label: 'Ticaret',     module: null },
   { to: '/payments',  icon: CreditCard,      label: 'Vade Takibi', module: 'payments' },
   { to: '/debts',     icon: Landmark,        label: 'Borç Takibi', module: 'debts' },
   { to: '/employees', icon: UserCheck,       label: 'Personel',    module: 'employees' },
