@@ -14,6 +14,12 @@ export default function Home() {
   const [featured, setFeatured] = useState([])
   const [settings, setSettings] = useState({})
 
+export default function Home() {
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language
+  const [featured, setFeatured] = useState([])
+  const [settings, setSettings] = useState({})
+
   useSEO({
     url: '/',
     jsonLd: {
@@ -39,12 +45,6 @@ export default function Home() {
       "sameAs": []
     }
   })
-
-export default function Home() {
-  const { t, i18n } = useTranslation()
-  const lang = i18n.language
-  const [featured, setFeatured] = useState([])
-  const [settings, setSettings] = useState({})
 
   useEffect(() => {
     api.get('/products?active_only=true').then(r => setFeatured(r.data.slice(0, 6))).catch(() => {})
