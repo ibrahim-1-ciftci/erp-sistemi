@@ -23,6 +23,7 @@ export default function Products() {
     description: lang === 'tr'
       ? 'Laves Kimya oto bakım ürünleri kataloğu. Şampuan, cila, temizlik ve bakım ürünleri.'
       : 'Laves Chemistry automotive care product catalog. Shampoo, polish, cleaning and care products.',
+    url: '/urunler',
   })
 
   useEffect(() => {

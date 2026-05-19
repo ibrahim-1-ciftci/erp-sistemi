@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://laveskimya.com/sitemap.xml
+
+# Admin paneli ve sepet taranmasın
+Disallow: /admin
+Disallow: /admin/
+Disallow: /sepet
+Disallow: /odeme
+Disallow: /siparis
+Disallow: /siparis-tamamlandi
+Disallow: /odeme-hatasi

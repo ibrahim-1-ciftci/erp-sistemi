@@ -17,6 +17,7 @@ export default function Contact() {
     description: lang === 'tr'
       ? 'Laves Kimya ile iletişime geçin. Telefon, e-posta veya WhatsApp ile ulaşın.'
       : 'Contact Laves Chemistry. Reach us by phone, email or WhatsApp.',
+    url: '/iletisim',
   })
 
   useEffect(() => {

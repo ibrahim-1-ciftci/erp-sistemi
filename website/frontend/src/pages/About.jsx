@@ -14,6 +14,7 @@ export default function About() {
     description: lang === 'tr'
       ? 'Laves Kimya hakkında bilgi edinin. Profesyonel oto bakım ürünleri üreticisi.'
       : 'Learn about Laves Chemistry. Professional automotive care products manufacturer.',
+    url: '/hakkimizda',
   })
 
   useEffect(() => {

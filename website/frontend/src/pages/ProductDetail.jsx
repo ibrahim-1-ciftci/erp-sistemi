@@ -62,10 +62,48 @@ export default function ProductDetail() {
   const catName = product?.category ? (lang === 'tr' ? product.category.name_tr : product.category.name_en) : ''
   const images = product?.images?.length > 0 ? product.images : (product?.image ? [product.image] : [])
 
+  // JSON-LD Structured Data
+  const firstVariant = product?.variants?.[0]
+  const effectivePrice = firstVariant?.price_discounted || firstVariant?.price || product?.price
+  const jsonLd = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": name,
+    "description": summary ? summary.replace(/<[^>]*>/g, '').trim() : undefined,
+    "image": images[0] ? (images[0].startsWith('http') ? images[0] : `https://laveskimya.com${images[0]}`) : undefined,
+    "brand": { "@type": "Brand", "name": "Laves Kimya" },
+    "manufacturer": {
+      "@type": "Organization",
+      "name": "Laves Kimya",
+      "url": "https://laveskimya.com",
+      "address": { "@type": "PostalAddress", "addressLocality": "Şanlıurfa", "addressCountry": "TR" }
+    },
+    "offers": product.variants && product.variants.length > 0
+      ? product.variants.map(v => ({
+          "@type": "Offer",
+          "name": v.label,
+          "price": v.price_discounted || v.price,
+          "priceCurrency": "TRY",
+          "availability": "https://schema.org/InStock",
+          "url": `https://laveskimya.com/urun/${product.id}`,
+          "seller": { "@type": "Organization", "name": "Laves Kimya" }
+        }))
+      : effectivePrice ? {
+          "@type": "Offer",
+          "price": effectivePrice,
+          "priceCurrency": "TRY",
+          "availability": "https://schema.org/InStock",
+          "url": `https://laveskimya.com/urun/${product.id}`,
+          "seller": { "@type": "Organization", "name": "Laves Kimya" }
+        } : undefined
+  } : undefined
+
   useSEO({
     title: name || undefined,
     description: summary || undefined,
     image: images[0] || undefined,
+    url: `/urun/${id}`,
+    jsonLd,
   })
 
   const whatsappNum = settings.whatsapp?.replace(/\D/g, '')

@@ -6,6 +6,39 @@ import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
 import Carousel from '../components/Carousel'
 import ParticleCanvas from '../components/ParticleCanvas'
+import useSEO from '../hooks/useSEO'
+
+export default function Home() {
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language
+  const [featured, setFeatured] = useState([])
+  const [settings, setSettings] = useState({})
+
+  useSEO({
+    url: '/',
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Laves Kimya",
+      "url": "https://laveskimya.com",
+      "logo": "https://laveskimya.com/webicon.png",
+      "description": "Profesyonel oto bakım ve temizlik ürünleri üreticisi. Şanlıurfa Eyyübiye.",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Eyyüp Nebi, Şehit Uzman Çavuş Mehmet Gözcü Sokak No:82/B",
+        "addressLocality": "Eyyübiye",
+        "addressRegion": "Şanlıurfa",
+        "postalCode": "63000",
+        "addressCountry": "TR"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": ["Turkish", "English"]
+      },
+      "sameAs": []
+    }
+  })
 
 export default function Home() {
   const { t, i18n } = useTranslation()
