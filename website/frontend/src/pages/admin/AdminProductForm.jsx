@@ -16,12 +16,6 @@ const EMPTY = {
   demo_youtube_url: '', demo_before_image: '', demo_after_image: '',
   demo_title_tr: '', demo_title_en: '',
 }
-  details_tr: '', details_en: '',
-  category_id: '', is_active: true, order: 0,
-  price: '', price_discounted: '', discount_percent: '',
-  price_unit: 'adet', min_order_qty: '1',
-  show_price: true, price_note_tr: '', price_note_en: '',
-}
 
 export default function AdminProductForm() {
   const { id } = useParams()
