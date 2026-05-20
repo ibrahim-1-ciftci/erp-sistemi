@@ -36,17 +36,28 @@ export default function Checkout() {
     setLoading(true)
     try {
       if (paymentMethod === 'card') {
-        // PayTR iFrame başlat
+        // Önce siparişi kaydet, sonra PayTR iFrame başlat
+        const orderRes = await api.post('/orders', {
+          customer: form,
+          items: items.map(i => ({ product_id: i.id, name: (lang === 'tr' ? i.name_tr : i.name_en) + (i.variantLabel ? ` (${i.variantLabel})` : ''), qty: i.qty, price: i.price })),
+          payment_method: 'card',
+          total: cartStore.getTotal(),
+          lang,
+        })
+        const orderId = orderRes.data.id
+
         const res = await api.post('/payment/start', {
           ...form,
+          order_id: `LVS${orderId}`,
           items: items.map(i => ({
-            name: lang === 'tr' ? i.name_tr : i.name_en,
+            name: (lang === 'tr' ? i.name_tr : i.name_en) + (i.variantLabel ? ` (${i.variantLabel})` : ''),
             qty: i.qty,
             price: i.price,
           })),
           total: cartStore.getTotal(),
           lang,
         })
+        cartStore.clear()
         setIframeUrl(res.data.iframe_url)
         setLoading(false)
         return
