@@ -13,6 +13,14 @@ const EMPTY = {
   price: '', price_discounted: '', discount_percent: '',
   price_unit: 'adet', min_order_qty: '1',
   show_price: true, price_note_tr: '', price_note_en: '',
+  demo_youtube_url: '', demo_before_image: '', demo_after_image: '',
+  demo_title_tr: '', demo_title_en: '',
+}
+  details_tr: '', details_en: '',
+  category_id: '', is_active: true, order: 0,
+  price: '', price_discounted: '', discount_percent: '',
+  price_unit: 'adet', min_order_qty: '1',
+  show_price: true, price_note_tr: '', price_note_en: '',
 }
 
 export default function AdminProductForm() {
@@ -53,6 +61,11 @@ export default function AdminProductForm() {
           show_price: p.show_price !== false,
           price_note_tr: p.price_note_tr || '',
           price_note_en: p.price_note_en || '',
+          demo_youtube_url: p.demo_youtube_url || '',
+          demo_before_image: p.demo_before_image || '',
+          demo_after_image: p.demo_after_image || '',
+          demo_title_tr: p.demo_title_tr || '',
+          demo_title_en: p.demo_title_en || '',
         })
         setExistingImages((p.images || []).map((img, i) => ({
           id: (p.image_ids || [])[i] ?? null,
@@ -522,6 +535,52 @@ export default function AdminProductForm() {
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Demo İçeriği */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">Demo İçeriği</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Ürün kullanımını gösteren video ve önce/sonra görselleri</p>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Demo Başlığı (TR)</label>
+                <input value={form.demo_title_tr} onChange={e => f('demo_title_tr', e.target.value)}
+                  placeholder="Örn: Hızlı Cila Kullanımı"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">YouTube Video URL</label>
+                <input value={form.demo_youtube_url} onChange={e => f('demo_youtube_url', e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                {form.demo_youtube_url && (() => {
+                  const match = form.demo_youtube_url.match(/(?:v=|youtu\.be\/)([^&\s]+)/)
+                  return match ? (
+                    <div className="mt-2 rounded-xl overflow-hidden aspect-video">
+                      <iframe src={`https://www.youtube.com/embed/${match[1]}`} className="w-full h-full" allowFullScreen title="demo" />
+                    </div>
+                  ) : null
+                })()}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Önce Görseli URL</label>
+                <input value={form.demo_before_image} onChange={e => f('demo_before_image', e.target.value)}
+                  placeholder="https://... veya /uploads/..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                {form.demo_before_image && (
+                  <img src={form.demo_before_image} alt="önce" className="mt-2 w-full h-32 object-cover rounded-xl border border-gray-200" />
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Sonra Görseli URL</label>
+                <input value={form.demo_after_image} onChange={e => f('demo_after_image', e.target.value)}
+                  placeholder="https://... veya /uploads/..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                {form.demo_after_image && (
+                  <img src={form.demo_after_image} alt="sonra" className="mt-2 w-full h-32 object-cover rounded-xl border border-gray-200" />
+                )}
               </div>
             </div>
 

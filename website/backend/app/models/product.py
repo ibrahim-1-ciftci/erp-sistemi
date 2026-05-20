@@ -27,6 +27,13 @@ class Product(Base):
     price_note_tr = Column(String, default="")        # Fiyat notu (TR) — "KDV dahil", "Toplu fiyat için arayın" vs.
     price_note_en = Column(String, default="")        # Fiyat notu (EN)
 
+    # Demo içeriği
+    demo_youtube_url = Column(String, default="")     # YouTube video URL
+    demo_before_image = Column(String, default="")    # Önce görseli
+    demo_after_image  = Column(String, default="")    # Sonra görseli
+    demo_title_tr     = Column(String, default="")    # Demo başlığı (TR)
+    demo_title_en     = Column(String, default="")    # Demo başlığı (EN)
+
     category = relationship("Category", back_populates="products")
     images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan", order_by="ProductImage.order")
     variants = relationship("ProductVariant", back_populates="product", cascade="all, delete-orphan", order_by="ProductVariant.sort_order")

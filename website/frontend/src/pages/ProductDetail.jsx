@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Package, ZoomIn, X, Phone, ShoppingCart } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Package, ZoomIn, X, Phone, ShoppingCart, PlayCircle } from 'lucide-react'
 import api from '../api/axios'
 import useSEO from '../hooks/useSEO'
 import { cartStore } from '../store/cartStore'
@@ -18,6 +18,7 @@ export default function ProductDetail() {
   const [lightbox, setLightbox] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
   const [selectedVariant, setSelectedVariant] = useState(null)
+  const [demoModal, setDemoModal] = useState(false)
 
   const handleAddToCart = () => {
     const itemToAdd = selectedVariant
@@ -291,6 +292,15 @@ export default function ProductDetail() {
                   ? (lang === 'tr' ? '✓ Sepete Eklendi' : '✓ Added to Cart')
                   : (lang === 'tr' ? 'Sepete Ekle' : 'Add to Cart')}
               </button>
+              {/* Demo butonu — sadece demo içeriği varsa göster */}
+              {(product.demo_youtube_url || product.demo_before_image || product.demo_after_image) && (
+                <button
+                  onClick={() => setDemoModal(true)}
+                  className="flex items-center justify-center gap-3 border-2 border-blue-200 text-blue-600 hover:bg-blue-50 font-bold py-4 px-6 rounded-2xl transition-all w-full">
+                  <PlayCircle size={20} />
+                  {lang === 'tr' ? 'Ürün Kullanımını Gör' : 'See Product Demo'}
+                </button>
+              )}
               {whatsappUrl && (
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-2xl transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/25 w-full">
@@ -324,6 +334,73 @@ export default function ProductDetail() {
         {/* İlgili ürünler placeholder — kategori bazlı */}
         <RelatedProducts currentId={product.id} categoryId={product.category_id} lang={lang} />
       </div>
+
+      {/* Demo Modal */}
+      {demoModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setDemoModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">
+                {(lang === 'tr' ? product.demo_title_tr : product.demo_title_en) || (lang === 'tr' ? 'Ürün Kullanımı' : 'Product Demo')}
+              </h2>
+              <button onClick={() => setDemoModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-5 space-y-6">
+              {/* Video */}
+              {product.demo_youtube_url && (() => {
+                const match = product.demo_youtube_url.match(/(?:v=|youtu\.be\/)([^&\s]+)/)
+                return match ? (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      {lang === 'tr' ? '🎬 Kullanım Videosu' : '🎬 Usage Video'}
+                    </p>
+                    <div className="aspect-video rounded-2xl overflow-hidden bg-black">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${match[1]}?autoplay=1`}
+                        className="w-full h-full"
+                        allowFullScreen
+                        allow="autoplay; encrypted-media"
+                        title="demo video"
+                      />
+                    </div>
+                  </div>
+                ) : null
+              })()}
+
+              {/* Önce / Sonra */}
+              {(product.demo_before_image || product.demo_after_image) && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    {lang === 'tr' ? '📸 Önce / Sonra' : '📸 Before / After'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {product.demo_before_image && (
+                      <div>
+                        <div className="bg-red-50 text-red-600 text-xs font-bold text-center py-1.5 rounded-t-xl">
+                          {lang === 'tr' ? 'ÖNCE' : 'BEFORE'}
+                        </div>
+                        <img src={product.demo_before_image} alt="önce"
+                          className="w-full aspect-square object-cover rounded-b-xl border border-red-100" />
+                      </div>
+                    )}
+                    {product.demo_after_image && (
+                      <div>
+                        <div className="bg-green-50 text-green-600 text-xs font-bold text-center py-1.5 rounded-t-xl">
+                          {lang === 'tr' ? 'SONRA' : 'AFTER'}
+                        </div>
+                        <img src={product.demo_after_image} alt="sonra"
+                          className="w-full aspect-square object-cover rounded-b-xl border border-green-100" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightbox && images.length > 0 && (

@@ -62,6 +62,11 @@ def product_to_dict(p: Product) -> dict:
         "price_note_tr": p.price_note_tr or "",
         "price_note_en": p.price_note_en or "",
         "variants": variants,
+        "demo_youtube_url": p.demo_youtube_url or "",
+        "demo_before_image": p.demo_before_image or "",
+        "demo_after_image": p.demo_after_image or "",
+        "demo_title_tr": p.demo_title_tr or "",
+        "demo_title_en": p.demo_title_en or "",
         "category": {"id": p.category.id, "name_tr": p.category.name_tr, "name_en": p.category.name_en} if p.category else None
     }
 
@@ -142,6 +147,11 @@ def create_product(
     show_price: bool = Form(True),
     price_note_tr: str = Form(""),
     price_note_en: str = Form(""),
+    demo_youtube_url: str = Form(""),
+    demo_before_image: str = Form(""),
+    demo_after_image: str = Form(""),
+    demo_title_tr: str = Form(""),
+    demo_title_en: str = Form(""),
     images: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
     _=Depends(get_current_admin)
@@ -159,6 +169,11 @@ def create_product(
         show_price=show_price,
         price_note_tr=price_note_tr,
         price_note_en=price_note_en,
+        demo_youtube_url=demo_youtube_url,
+        demo_before_image=demo_before_image,
+        demo_after_image=demo_after_image,
+        demo_title_tr=demo_title_tr,
+        demo_title_en=demo_title_en,
     )
     db.add(p)
     db.flush()
@@ -192,6 +207,11 @@ def update_product(
     show_price: bool = Form(True),
     price_note_tr: str = Form(""),
     price_note_en: str = Form(""),
+    demo_youtube_url: str = Form(""),
+    demo_before_image: str = Form(""),
+    demo_after_image: str = Form(""),
+    demo_title_tr: str = Form(""),
+    demo_title_en: str = Form(""),
     images: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
     _=Depends(get_current_admin)
@@ -217,6 +237,11 @@ def update_product(
     p.show_price = show_price
     p.price_note_tr = price_note_tr
     p.price_note_en = price_note_en
+    p.demo_youtube_url = demo_youtube_url
+    p.demo_before_image = demo_before_image
+    p.demo_after_image = demo_after_image
+    p.demo_title_tr = demo_title_tr
+    p.demo_title_en = demo_title_en
 
     existing_count = len(p.images)
     for i, img in enumerate(images):
