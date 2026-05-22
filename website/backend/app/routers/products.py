@@ -290,6 +290,118 @@ def delete_product(id: int, db: Session = Depends(get_db), _=Depends(get_current
     return {"ok": True}
 
 
+@router.get("/export/excel")
+def export_products_excel(db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    """Tüm ürünleri Excel olarak indir"""
+    from fastapi.responses import StreamingResponse
+    from io import BytesIO
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+
+    SITE_URL = "https://laveskimya.com"
+    products = db.query(Product).order_by(Product.order).all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Ürünler"
+
+    # Başlık satırı
+    hf = PatternFill("solid", fgColor="1e40af")
+    hfont = Font(color="FFFFFF", bold=True, size=10)
+
+    headers = [
+        "ID", "Ürün Adı (TR)", "Ürün Adı (EN)", "Kategori",
+        "Durum", "Sıra",
+        "Normal Fiyat (₺)", "İndirimli Fiyat (₺)", "Birim", "Min. Sipariş",
+        "Fiyat Notu (TR)", "Fiyat Göster",
+        "Varyantlar",
+        "Ana Görsel URL", "Tüm Görseller",
+        "Kısa Açıklama (TR)", "Kısa Açıklama (EN)",
+        "Demo YouTube URL", "Demo Önce Görsel", "Demo Sonra Görsel",
+    ]
+
+    for col, h in enumerate(headers, 1):
+        c = ws.cell(row=1, column=col, value=h)
+        c.fill = hf
+        c.font = hfont
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    ws.row_dimensions[1].height = 30
+
+    alt = PatternFill("solid", fgColor="f0f4ff")
+
+    for row_idx, p in enumerate(products, 2):
+        row_fill = alt if row_idx % 2 == 0 else None
+        imgs = p.images if p.images else []
+        all_img_urls = ", ".join(
+            (SITE_URL + img.image) if img.image.startswith("/") else img.image
+            for img in imgs
+        )
+        main_img = (SITE_URL + p.image) if p.image and p.image.startswith("/") else (p.image or "")
+        cat_name = p.category.name_tr if p.category else ""
+
+        # Varyantlar
+        from ..models.product_variant import ProductVariant
+        variants = db.query(ProductVariant).filter(
+            ProductVariant.product_id == p.id, ProductVariant.is_active == True
+        ).order_by(ProductVariant.sort_order).all()
+        variant_str = " | ".join(
+            f"{v.label}: ₺{v.price_discounted or v.price}" for v in variants
+        ) if variants else ""
+
+        # HTML temizle
+        import re
+        def strip_html(s): return re.sub(r'<[^>]+>', '', s or '').strip()
+
+        values = [
+            p.id,
+            p.name_tr,
+            p.name_en,
+            cat_name,
+            "Aktif" if p.is_active else "Pasif",
+            p.order,
+            p.price or "",
+            p.price_discounted or "",
+            p.price_unit or "adet",
+            p.min_order_qty or 1,
+            p.price_note_tr or "",
+            "Evet" if p.show_price else "Hayır",
+            variant_str,
+            main_img,
+            all_img_urls,
+            strip_html(p.description_tr),
+            strip_html(p.description_en),
+            p.demo_youtube_url or "",
+            p.demo_before_image or "",
+            p.demo_after_image or "",
+        ]
+
+        for col, val in enumerate(values, 1):
+            c = ws.cell(row=row_idx, column=col, value=val)
+            if row_fill: c.fill = row_fill
+            c.alignment = Alignment(vertical="center", wrap_text=True)
+            # Görsel URL'lerini tıklanabilir link yap
+            if col in (14, 15) and val:
+                first_url = val.split(",")[0].strip()
+                if first_url.startswith("http"):
+                    c.hyperlink = first_url
+                    c.font = Font(color="1e40af", underline="single")
+
+    # Sütun genişlikleri
+    col_widths = [5, 25, 25, 15, 8, 5, 12, 12, 8, 8, 20, 8, 30, 40, 60, 30, 30, 40, 40, 40]
+    for i, w in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=urunler.xlsx"}
+    )
+
+
 # ── Varyant Yönetimi ──────────────────────────────────────────────────────
 
 from pydantic import BaseModel as PydanticBase

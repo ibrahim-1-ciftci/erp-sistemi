@@ -72,6 +72,19 @@ export default function AdminProducts() {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-blue-500/20">
           <Plus size={16} /> Yeni Ürün
         </button>
+        <button onClick={async () => {
+          try {
+            const token = localStorage.getItem('laves_admin_token')
+            const res = await fetch('/api/products/export/excel', { headers: { Authorization: `Bearer ${token}` } })
+            if (!res.ok) throw new Error()
+            const blob = await res.blob()
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a'); a.href = url; a.download = 'urunler.xlsx'; a.click()
+            URL.revokeObjectURL(url)
+          } catch { toast.error('İndirme hatası') }
+        }} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+          ⬇ Excel İndir
+        </button>
       </div>
 
       {/* Filtreler */}
