@@ -10,7 +10,6 @@ const STATUS_OPTIONS = [
   { value: 'delivered', label: 'Teslim Edildi', color: 'bg-green-50 text-green-700 border-green-200' },
   { value: 'cancelled', label: 'İptal', color: 'bg-red-50 text-red-700 border-red-200' },
 ]
-
 function statusInfo(val) {
   return STATUS_OPTIONS.find(s => s.value === val) || STATUS_OPTIONS[0]
 }
@@ -244,7 +243,7 @@ export default function AdminOrders() {
 
               {/* Aksiyonlar */}
               <div className="flex gap-3 pt-2">
-                {selected.status !== 'shipped' && selected.status !== 'delivered' && (
+                {selected.status !== 'shipped' && selected.status !== 'delivered' && selected.status !== 'cancelled' && (
                   <button onClick={() => updateStatus(selected.id, 'shipped')}
                     className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
                     <Truck size={15} /> Kargoya Ver (Mail Gönder)

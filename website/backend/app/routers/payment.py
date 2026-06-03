@@ -137,14 +137,35 @@ async def payment_notify(request: Request, db: Session = Depends(get_db)):
         return HTMLResponse("PAYTR_INVALID_HASH", status_code=400)
 
     if status == "success":
-        # Siparişi güncelle — order_id ile eşleştir
+        # Siparişi bul ve güncelle
         try:
             from sqlalchemy import text
-            db.execute(text(
-                "UPDATE orders SET status='paid', payment_ref=:ref WHERE payment_ref=:ref OR id::text=:oid"
-            ), {"ref": merchant_oid, "oid": merchant_oid.replace("LVS","").rstrip("0123456789")[:10]})
-            db.commit()
-        except Exception:
-            pass
+            from ..models.order import WebOrder
+            order_id_str = merchant_oid.replace("LVS", "")
+            # Sayısal kısmı al
+            import re
+            match = re.match(r'^(\d+)', order_id_str)
+            if match:
+                real_order_id = int(match.group(1))
+                order = db.query(WebOrder).filter(WebOrder.id == real_order_id).first()
+                if order and order.status == "pending":
+                    order.status = "confirmed"
+                    db.commit()
+                    # Ödeme başarılı — müşteriye ve admin'e mail gönder
+                    try:
+                        from ..core.mail import send_email, mail_order_received, mail_admin_new_order
+                        from ..core.config import settings as cfg
+                        if order.customer_email:
+                            subj, body = mail_order_received(order, order.lang or "tr")
+                            send_email(order.customer_email, subj, body)
+                        if cfg.MAIL_TO:
+                            subj, body = mail_admin_new_order(order)
+                            send_email(cfg.MAIL_TO, subj, body)
+                    except Exception as mail_err:
+                        import logging
+                        logging.getLogger(__name__).error(f"PayTR notify mail hatası: {mail_err}")
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"PayTR notify sipariş güncelleme hatası: {e}")
 
     return HTMLResponse("OK")

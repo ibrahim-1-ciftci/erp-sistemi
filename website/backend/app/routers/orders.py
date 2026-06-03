@@ -65,21 +65,20 @@ def create_order(req: CreateOrderRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(order)
 
-    # Mail bildirimleri (hata olsa bile sipariş kaydedildi)
-    try:
-        from ..core.mail import send_email, mail_order_received, mail_admin_new_order
-        from ..core.config import settings as cfg
-        # Müşteriye
-        if order.customer_email:
-            subj, body = mail_order_received(order, req.lang)
-            send_email(order.customer_email, subj, body)
-        # Admin'e
-        if cfg.MAIL_TO:
-            subj, body = mail_admin_new_order(order)
-            send_email(cfg.MAIL_TO, subj, body)
-    except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Mail hatası: {e}")
+    # Mail bildirimleri — kart ödemesinde mail PayTR notify gelince gönderilir
+    if req.payment_method != 'card':
+        try:
+            from ..core.mail import send_email, mail_order_received, mail_admin_new_order
+            from ..core.config import settings as cfg
+            if order.customer_email:
+                subj, body = mail_order_received(order, req.lang)
+                send_email(order.customer_email, subj, body)
+            if cfg.MAIL_TO:
+                subj, body = mail_admin_new_order(order)
+                send_email(cfg.MAIL_TO, subj, body)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Mail hatası: {e}")
 
     return {"id": order.id, "status": "ok"}
 
@@ -110,15 +109,24 @@ def update_status(id: int, body: dict, db: Session = Depends(get_db), _=Depends(
     o.status = body.get("status", o.status)
     db.commit()
 
-    # Kargoya verildi → müşteriye mail
-    if o.status == "shipped" and old_status != "shipped" and o.customer_email:
-        try:
-            from ..core.mail import send_email, mail_order_shipped
+    # Durum maillerini gönder
+    try:
+        from ..core.mail import send_email, mail_order_received, mail_order_shipped
+        from ..core.config import settings as cfg
+
+        # Onaylandı → müşteriye sipariş alındı maili
+        if o.status == "confirmed" and old_status != "confirmed" and o.customer_email:
+            subj, html = mail_order_received(o, o.lang or "tr")
+            send_email(o.customer_email, subj, html)
+
+        # Kargoya verildi → müşteriye kargo maili
+        if o.status == "shipped" and old_status != "shipped" and o.customer_email:
             subj, html = mail_order_shipped(o, o.lang or "tr")
             send_email(o.customer_email, subj, html)
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f"Kargo mail hatası: {e}")
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Durum mail hatası: {e}")
 
     return {"ok": True}
 
