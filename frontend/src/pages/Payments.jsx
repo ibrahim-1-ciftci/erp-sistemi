@@ -33,8 +33,9 @@ export default function Payments() {
   const [calMonth, setCalMonth] = useState(today.getMonth() + 1)
   const [orders, setOrders] = useState([])
   const [statusFilter, setStatusFilter] = useState('')
-  const [sortBy, setSortBy] = useState('due_date')     // due_date | created_at
-  const [sortDir, setSortDir] = useState('asc')        // asc | desc
+  const [sortBy, setSortBy] = useState('due_date')
+  const [sortDir, setSortDir] = useState('asc')
+  const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -68,7 +69,6 @@ export default function Payments() {
         setSummary({ total_pending: r.data.total_pending, overdue_count: r.data.overdue_count })
       })
   }
-
   const loadCal = () =>
     api.get('/payments/calendar', { params: { year: calYear, month: calMonth } })
       .then(r => setCalData(r.data.by_day || {}))
@@ -76,6 +76,10 @@ export default function Payments() {
   useEffect(() => { loadList() }, [statusFilter, tab, sortBy, sortDir])
   useEffect(() => { loadCal() }, [calYear, calMonth])
   useEffect(() => { api.get('/orders', { params: { limit: 200 } }).then(r => setOrders(r.data.items)) }, [])
+
+  const filteredPayments = search.trim()
+    ? payments.filter(p => p.customer_name?.toLowerCase().includes(search.toLowerCase()))
+    : payments
 
   // ---- item helpers ----
   const addItem    = () => setForm(f => ({ ...f, items: [...f.items, { product_name:'', quantity:1, unit:defaultUnit, unit_price:0 }] }))
@@ -151,8 +155,8 @@ export default function Payments() {
     const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next
   })
   const toggleAll = () => {
-    if (checkedIds.size === payments.length) setCheckedIds(new Set())
-    else setCheckedIds(new Set(payments.map(p => p.id)))
+    if (checkedIds.size === filteredPayments.length) setCheckedIds(new Set())
+    else setCheckedIds(new Set(filteredPayments.map(p => p.id)))
   }
   const openEdit = (p) => {
     setEditPayment(p)
@@ -335,7 +339,18 @@ export default function Payments() {
           </select>
         )}
         {view === 'list' && (
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Müşteri ara..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="border rounded-lg pl-8 pr-3 py-2 text-sm w-44 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+              />
+              <span className="absolute left-2.5 top-2.5 text-gray-400 text-xs">🔍</span>
+            </div>
             <select className="border rounded-lg px-3 py-2 text-sm" value={sortBy} onChange={e => setSortBy(e.target.value)}>
               <option value="due_date">Vade Tarihine Göre</option>
               <option value="created_at">Kayıt Tarihine Göre</option>
@@ -356,7 +371,7 @@ export default function Payments() {
               <tr>
                 <th className="px-3 py-3 w-8">
                   <input type="checkbox" className="w-4 h-4 cursor-pointer accent-blue-600"
-                    checked={payments.length > 0 && checkedIds.size === payments.length}
+                    checked={filteredPayments.length > 0 && checkedIds.size === filteredPayments.length}
                     onChange={toggleAll} />
                 </th>
                 {['Müşteri','Sipariş Tarihi','Ürünler','Toplam','Ödenen','Kalan','Vade','Durum',''].map(h =>
@@ -364,8 +379,8 @@ export default function Payments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {payments.length === 0 && <tr><td colSpan={10} className="px-4 py-10 text-center text-gray-400">{tab === 'archive' ? 'Henüz ödenen kayıt yok' : 'Kayıt bulunamadı'}</td></tr>}
-              {payments.map(p => (
+              {filteredPayments.length === 0 && <tr><td colSpan={10} className="px-4 py-10 text-center text-gray-400">{search ? 'Arama sonucu bulunamadı' : (tab === 'archive' ? 'Henüz ödenen kayıt yok' : 'Kayıt bulunamadı')}</td></tr>}
+              {filteredPayments.map(p => (
                 <tr key={p.id} className={`hover:bg-gray-50 ${checkedIds.has(p.id) ? 'bg-blue-50' : ''} ${p.status==='overdue' ? 'bg-red-50' : ''} ${p.status==='paid' ? 'opacity-75' : ''}`}>
                   <td className="px-3 py-3">
                     <input type="checkbox" className="w-4 h-4 cursor-pointer accent-blue-600"
